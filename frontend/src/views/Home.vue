@@ -24,12 +24,12 @@
         </v-btn>
       </v-toolbar>
     </v-card>
-
+  
     <!-- Hoja 750 o 800 -->
     <v-sheet
       id="scrolling-techniques-3"
       class="overflow-y-auto"
-      max-height="800"
+      max-height="850"
       color="#110C3A"
     >
       <!-- Hoja -->
@@ -82,11 +82,13 @@
               Género:
               <v-combobox :items="generos" v-model="genre" outlined dense rounded></v-combobox>
             </v-toolbar-title>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-toolbar-title>
               Artista:
                <v-combobox :items="artistas" v-model="artist" outlined dense rounded></v-combobox>
             </v-toolbar-title>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-toolbar-title>
               Búsqueda por título:
@@ -96,12 +98,13 @@
                 dense
                 label="Search"
                 v-model="busqueda"
-                v-on:keyup.enter="send()"
+                v-on:keyup.enter="getSong()"
               ></v-text-field>
             </v-toolbar-title>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-toolbar-title>
-              Tipo de canción:
+              Ordenar por:
               <v-combobox
                 :items="types"
                 v-model="type"
@@ -110,6 +113,7 @@
                 rounded
               ></v-combobox>
             </v-toolbar-title>
+            <!-- Separador -->
             <v-spacer></v-spacer>
           </v-toolbar>
         </v-card>
@@ -122,16 +126,20 @@
           background: -webkit-linear-gradient(to right, #110C3A, #351442, #4C1E45, #351442, #110C3A;
           background: linear-gradient(to right,  #110C3A, #351442, #4C1E45, #351442, #110C3A);"
           >
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
             <v-btn @click="getSong()" style="background: #4C1E45">Buscar</v-btn>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
             <v-btn @click="personalizedSong()" style="background: #4C1E45">¡Recomiéndame algo personalizado!</v-btn>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
             <v-btn @click="randomSong()" style="background: #4C1E45">¡Recomiéndame cualquier cosa!</v-btn>
+            <!-- Separador -->
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
             <v-spacer></v-spacer>
@@ -158,9 +166,27 @@
                       <v-card-subtitle v-text="song.artist"></v-card-subtitle>
                       <v-card-text v-text="song.genre"></v-card-text>
                     </div>
-                    <v-avatar class="ma-3" size="125" tile>
-                      <v-img :src="song.src"></v-img>
-                    </v-avatar>
+                    <table height="50%">
+                      <tr>
+                        <td valign="middle" align="center">
+                          <iframe :src="song.preview" width="300" height="80" margin="10px" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+                        </td>
+                        <td valign="middle" align="center">
+                          <span style="color:transparent">holaaaa</span>
+                          <!-- Botón Corazón -->
+                          <v-btn icon>
+                            <v-icon>mdi-heart</v-icon>
+                          </v-btn>
+                          <span style="color:transparent">holaaaa</span>
+                        </td>
+                        <td valign="middle" align="center">
+                          <v-avatar class="ma-3" size="125" tile>
+                            <v-img :src="song.cover"></v-img>
+                          </v-avatar>
+                        </td>
+                      </tr>
+                    </table>
+                    
                   </div>
                 </v-card>
               </v-col>
@@ -229,11 +255,12 @@
       genre: "Cualquiera",
       artist: "Cualquiera",
       type: "Cualquiera",
+      num: 0,
+      aux: "",
+      songs: [],
       generos: [],
       artistas: [],
       historial: [],
-      num: 0,
-      songs: [],
       slides: [
         {
           position: "center",
@@ -270,8 +297,7 @@
         { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
         { title: "Ayuda", icon: "mdi-help", link: "/help" }
       ],
-      types: ["Bailable", "Tranquila", "Alegre", "Triste"],
-      colores:[],
+      types: ["Cualquiera", "Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
       colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
     };
   },
@@ -331,6 +357,7 @@
       this.songs = [];
       var random = Math.floor(Math.random() * this.generos.length);
       var g = this.generos[random];
+      console.log(g);
       axios.get(direccionIp + "/getRandomSongs",{
           params:{
             genre: g,
@@ -345,41 +372,49 @@
             this.songs[0]["color"] = this.colors[random2];
           }
         });
+        this.type = "Cualquiera";
+        this.artist = "Cualquiera";
+        this.busqueda = "";
+        this.genre = "Cualquiera";
       console.log("SALGO DE RANDOM SONG\n\n");
     },
 
-    getSongColor: function() {
-      console.log(this.colors.length);
-      console.log(this.num);
-      if (this.num >= this.colors.length) {
-        this.num = 0;
-        console.log(this.colors[this.num]);
-        return this.colors[this.num];
-      } else if (this.num < this.colors.length()) {
-        this.num = this.num + 1;
-        return this.colors[this.num];
-      }
-    },
-
-    /////////////////////
-    // RECOMENDACIONES //
-    /////////////////////
-
-    aleatorios(response) {
-      console.log("ESTOY EN ALEATORIOOOOS");
-      for (var i = 0; i < response.length; i++) {
-        this.songs.push(response[i]);
-      }
-      this.songs = [];
-    },
-
+    /****** GET SONG ******/
     getSong() {
       console.log("ESTOY EN GET SONG");
       this.songs = [];
+      for(var i = 0; i < this.types.length; i++){
+        if(this.type == this.types[i]){
+          if(i == 0){
+            this.aux = "+animada";
+          }
+          else if(i == 1){
+            this.aux = "-animada";
+          }
+          else if(i == 2){
+            this.aux = "+bailable";
+          }
+          else if(i == 3){
+            this.aux = "-bailable";
+          }
+          else if(i == 4){
+           this.aux = "+energica";
+          }
+          else if(i == 5){
+            this.aux = "-energica";
+          }
+          else if(i == 6){
+            this.aux = "+popular";
+          }
+          else if(i == 7){
+            this.aux = "-popular";
+          }
+        }
+      }
       var param = {
         genre: this.genre,
         artist: this.artist,
-        type: this.type,
+        type: this.aux,
         busqueda: this.busqueda,
       };
       this.historial.push(param);
@@ -387,7 +422,7 @@
         params:{
           genre: this.genre,
           artist: this.artist,
-          type: this.type,
+          type: this.aux,
           busqueda: this.busqueda,
         },
       }).then(
@@ -395,6 +430,7 @@
           if(respuesta.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
             alert(respuesta.data[0]);
           }else{
+            console.log(this.busqueda);
             console.log(respuesta.data.length);
             this.num = 0;
             for(var i = 0; i < respuesta.data.length; i++){
@@ -408,6 +444,18 @@
           }
         });
       console.log("SALGO DE GET SONG\n\n");
+    },
+
+    /////////////////////
+    // RECOMENDACIONES //
+    /////////////////////
+
+    aleatorios(response) {
+      console.log("ESTOY EN ALEATORIOOOOS");
+      for (var i = 0; i < response.length; i++) {
+        this.songs.push(response[i]);
+      }
+      this.songs = [];
     },
 
     recommend: function() {
