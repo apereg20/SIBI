@@ -71,7 +71,6 @@ app.get("/getRandomSongs",(req,res)=>{
   var lista = [];
   console.log("GÉNERO: ",genre);
   query += "return c";
-  //var query="match(c:Canciones) where c.genre='"+searchGenre+"' return c";// order by c.Popularity desc limit 10";
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
           lista.push(result.get(0).properties);
@@ -87,22 +86,27 @@ app.get("/getRandomSongs",(req,res)=>{
   console.log("SALGO de /getRandomSongs\n\n");
 });
 
+/****** GET FILTERED SONGS ******/
 app.get("/getSongs",(req,res)=>{
   console.log("Estoy en funcion /getSongs");
   const session = driver.session();
   var genre = req.query.genre;
-  var busqueda = req.body.busqueda;
+  var busqueda = req.query.busqueda;
   var artist = req.query.artist;
-  var type = req.body.type;
+  var type = req.query.type;
   var lista = [];
   var query = "MATCH (c: Canciones) "; 
   console.log("GÉNERO: ",genre);
   console.log("ARTISTA: ",artist);
-  console.log(artist != "Cualquiera");
+  console.log("ORDENAR POR: ", type);
+  console.log("BUSCAR POR: ", busqueda);
 
+  //FILTRAR POR GÉNERO
   if(genre != "Cualquiera" && genre != ""){
     query += "where c.genre='" + genre + "' ";
   }
+
+  //FILTRAR POR ARTISTA
   if(artist != "Cualquiera" && artist != ""){
       if(query.includes("where")){
           query+="AND c.artist='"+artist+"' ";
@@ -110,8 +114,46 @@ app.get("/getSongs",(req,res)=>{
           query+="where c.artist='"+artist+"' ";
       }
   }
+  //FILTRAR POR NOMBRE BUSCADO
+  if (busqueda != "") {
+    if(query.includes("where")){
+      query += " AND (c.name =~ '(?i).*" + busqueda + ".*') ";
+    }
+    else{
+      query += " where (c.name =~ '(?i).*" + busqueda + ".*') ";
+    }
+  }
 
   query += "return c";
+
+  //ORDENAR SEGÚN FILTROS
+  if(type != "Cualquiera" && type != ""){
+    if(type == "+animada"){
+      query += " order by c.valence desc";
+    }
+    else if(type == "-animada"){
+      query += " order by c.valence asc";
+    }
+    else if(type == "+bailable"){
+      query += " order by c.danceability desc";
+    }
+    else if(type == "-bailable"){
+      query += " order by c.danceability asc";
+    }
+    else if(type == "+energica"){
+      query += " order by c.energy desc";
+    }
+    else if(type == "-energica"){
+      query += " order by c.energy asc";
+    }
+    else if(type == "+popular"){
+      console.log("++POPULARR");
+      query += " order by c.popularity desc";
+    }
+    else if(type == "-popular"){
+      query += " order by c.popularity asc";
+    }
+  }
 
   /*if (search != "" && platform != "Cualquiera") {
     query = query.concat(" AND (v.name =~ '(?i).*" + search + ".*') ");
@@ -137,6 +179,7 @@ app.get("/getSongs",(req,res)=>{
   const resultadoPromesa = session.run(query).subscribe({
     onNext: function (result) {
         lista.push(result.get(0).properties);
+        console.log(result.get(0).properties.popularity);
     },
     onCompleted: function () {
         res.send(lista);
@@ -149,27 +192,31 @@ app.get("/getSongs",(req,res)=>{
     }
   })
   console.log("SALGO de /getSongs\n\n");
-  /*
-  const resultPromise = session.run(query).subscribe({
-    onNext: function(record) {
-      var element = record.get("song").properties;
+});
 
-      if (element.popularity == undefined) {
-        element.popularity = { low: "--" };
-        result.push(element);
-      } else {
-        result.push(element);
+/****** GET PERSONALIZED SONGS ******/
+app.get("/getPersonalizedSongs",(req,res)=>{
+  console.log("Estoy en funcion /getPersonalizedSongs");
+  const session = driver.session();
+  var genre = req.query.genre;
+  var query = "Match(c:Canciones) where c.genre='" + genre + "' ";
+  var lista = [];
+  console.log("GÉNERO: ",genre);
+  query += "return c";
+  //var query="match(c:Canciones) where c.genre='"+searchGenre+"' return c";// order by c.Popularity desc limit 10";
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+          lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+          res.send(lista);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
       }
-    },
-    onCompleted: function() {
-      if (result.length < 1) result = [{ message: "Error" }];
-      res.send(result);
-      // session.close();
-    },
-    onError: function(error) {
-      console.log(error);
-    }
-  });*/
+  })
+  console.log("SALGO de /getPersonalizedSongs\n\n");
 });
 
 
