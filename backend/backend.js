@@ -25,7 +25,7 @@ app.get("/getGeneros",(req,res)=>{
   const session = driver.session();
   console.log("Estoy en /getGeneros");
   var generos=[];
-  var query="match(c:Canciones) return distinct c.genre"
+  var query="match(c:Canciones) return distinct c.genre order by c.genre"
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
           generos.push(result.get(0));
@@ -46,7 +46,7 @@ app.get("/getArtistas",(req,res)=>{
   const session = driver.session();
   console.log("Estoy en /getArtistas");
   var artistas=[];
-  var query="match(c:Canciones) return distinct c.artist"
+  var query="match(c:Canciones) return distinct c.artist order by c.artist"
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
           artistas.push(result.get(0));
@@ -68,7 +68,7 @@ app.get("/getArtistasG",(req,res)=>{
   console.log("Estoy en /getArtistasG");
   var artistas=[];
   var genre = req.query.genre;
-  var query="match(c:Canciones) where c.genre='" + genre + "'return distinct c.artist"
+  var query="match(c:Canciones) where c.genre='" + genre + "'return distinct c.artist order by c.artist"
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
           artistas.push(result.get(0));
@@ -82,28 +82,6 @@ app.get("/getArtistasG",(req,res)=>{
       }
   })
   console.log("SALGO DE /getArtistasG\n\n");
-});
-
-/****** GET GÉNEROS DE UN ARTISTA ******/
-app.get("/getGenerosA",(req,res)=>{
-  const session = driver.session();
-  console.log("Estoy en /getGenerosA");
-  var generos=[];
-  var artist = req.query.artist;
-  var query="match(c:Canciones) where c.artist='" + artist + "'return distinct c.genre"
-  const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          generos.push(result.get(0));
-      },
-      onCompleted: function () {
-          res.send(generos);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
-  })
-  console.log("SALGO DE /getGenerosA\n\n");
 });
 
 /****** GET RANDOM SONGS ******/
@@ -168,26 +146,26 @@ app.get("/getSongs",(req,res)=>{
       query += " order by c.valence desc";
     }
     else if(type == "-animada"){
-      query += " order by c.valence asc";
+      query += " order by c.valence";
     }
     else if(type == "+bailable"){
       query += " order by c.danceability desc";
     }
     else if(type == "-bailable"){
-      query += " order by c.danceability asc";
+      query += " order by c.danceability";
     }
     else if(type == "+energica"){
       query += " order by c.energy desc";
     }
     else if(type == "-energica"){
-      query += " order by c.energy asc";
+      query += " order by c.energy";
     }
     else if(type == "+popular"){
       console.log("++POPULARR");
       query += " order by c.popularity desc";
     }
     else if(type == "-popular"){
-      query += " order by c.popularity asc";
+      query += " order by c.popularity";
     }
   }
   console.log(query);
