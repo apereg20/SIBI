@@ -300,6 +300,19 @@
     },
 
       /////////////////////
+     //      WATCH      //
+    /////////////////////
+    watch:{
+      genre:function () {
+        if(this.genre != "" && this.genre != "Cualquiera"){
+          this.rellenaArtistaG(this.genre);
+        }else{
+          this.rellenarArtistas();
+        }
+      },
+    },
+
+      /////////////////////
      //     MÉTODOS     //
     /////////////////////
     methods: {
@@ -359,9 +372,9 @@
         console.log("SALGO DE RELLENAR ARTISTAS\n\n");
       },
 
-      /****** RELLENAR ARTISTAS ******/
+      /****** RELLENA ARTISTA GENERO ******/
       rellenaArtistaG(genre) {
-        console.log("ESTOY EN RELLENAR ARTISTASSS");
+        console.log("ESTOY EN RELLENAR ARTISTAS DE UN GENERO " + genre);
           axios.get(direccionIp + "/getArtistasG", {
             params: {
               genre: genre,
@@ -373,7 +386,7 @@
             }
           });
         this.artistas.push("Cualquiera");
-        console.log("SALGO DE RELLENAR ARTISTAS\n\n");
+        console.log("SALGO DE RELLENAR ARTISTAS DE UN GENERO\n\n");
       },
 
       /****** RANDOM SONG ******/
