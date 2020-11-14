@@ -19,30 +19,20 @@
         <!-- Separador -->
         <v-spacer></v-spacer>
         <!-- Botón Corazón -->
-        <v-btn icon>
+        <v-btn icon @click="cambiarPantalla('/favoritas')">
           <v-icon>mdi-heart</v-icon>
         </v-btn>
       </v-toolbar>
     </v-card>
   
-    <!-- Hoja 750 o 800 -->
     <v-sheet
       id="scrolling-techniques-3"
       class="overflow-y-auto"
       max-height="850"
       color="#110C3A"
     >
-      <!-- Hoja -->
-      <!--<v-sheet
-        id="scrolling-techniques-3"
-        class="overflow-y-auto"
-        max-height="50"
-      >
-        <v-container style="height: 1000px;"></v-container>
-      </v-sheet>-->
-
       <!-- CONTENIDO -->
-      <v-content>
+      <v-main> 
         <!-- CARRUSEL DE PREVISUALIZACIONES -->
         <v-carousel
           cycle
@@ -63,7 +53,7 @@
             </v-row>
           </v-carousel-item>
         </v-carousel>
-        <!-- FORMAS DE BÚSQUEDA color="2F123F" -->
+        <!-- FORMAS DE BÚSQUEDA -->
         <v-card
           dark
           height="100px"
@@ -80,7 +70,7 @@
           >
             <v-toolbar-title>
               Género:
-              <v-combobox :items="generos" v-model="genre" outlined dense rounded></v-combobox>
+              <v-combobox :items="generos" v-model="genre" outlined dense rounded ></v-combobox>
             </v-toolbar-title>
             <!-- Separador -->
             <v-spacer></v-spacer>
@@ -145,7 +135,7 @@
             <v-spacer></v-spacer>
           </v-toolbar>
         </v-card>
-      </v-content>
+      </v-main>
       <!-- CONTENEDOR DE CANCIONES -->
       <v-container grid-list-md text-xs-center fluid pa-12>
         <v-layout row wrap fill-height fill-width>
@@ -153,8 +143,6 @@
             <v-col cols="12">
               <!-- Bucle que recorre todos los elementos de la lista itemsMusic -->
               <v-col v-for="(song, i) in songs" :key="i" cols="flex">
-                <!-- Ponemos la imagen -->
-                <!-- QUE ME DEVUELVA EL COLOR -->
                 <v-card :color="song.color" dark>
                   <!-- Ponemos los datos de la canción -->
                   <div class="d-flex flex-no-wrap justify-space-between">
@@ -174,7 +162,7 @@
                         <td valign="middle" align="center">
                           <span style="color:transparent">holaaaa</span>
                           <!-- Botón Corazón -->
-                          <v-btn icon>
+                          <v-btn icon @click="addFavs(song)">
                             <v-icon>mdi-heart</v-icon>
                           </v-btn>
                           <span style="color:transparent">holaaaa</span>
@@ -186,7 +174,6 @@
                         </td>
                       </tr>
                     </table>
-                    
                   </div>
                 </v-card>
               </v-col>
@@ -223,7 +210,7 @@
             <v-list-item
               v-for="item in items"
               :key="item.title"
-              :to="item.link"
+              @click="cambiarPantalla(item.link)"
             >
               <v-list-item-action>
                 <v-icon>{{ item.icon }}</v-icon>
@@ -245,283 +232,367 @@
   export default {
     props: {
       source: String
-  },
-  name: "App",
-  data() {
-    return {
-      name: "inicio",
-      busqueda: "",
-      drawer: false,
-      genre: "Cualquiera",
-      artist: "Cualquiera",
-      type: "Cualquiera",
-      num: 0,
-      aux: "",
-      songs: [],
-      generos: [],
-      artistas: [],
-      historial: [],
-      slides: [
-        {
-          position: "center",
-          text: "Descubre nuevos artistas",
-          src:
-            "https://elnuevopais.net/wp-content/uploads/2017/09/Bad-Bunny.jpg",
-          class: "display-3"
-        },
-        {
-          position: "center",
-          text: "Encuentra música adaptada a tus gustos",
-          src:
-            "https://s1.eestatic.com/2020/07/03/invertia/empresas/Musica-Festivales_de_musica-Turismo-Mad_Cool-Benidorm-Coronavirus-Enfermedades_infecciosas-Infecciones-Impacto_coronavirus-Empresas_502461416_155038081_1706x960.jpg",
-          class: "display-3 white--text"
-        },
-        {
-          position: "center",
-          text: "Descubre música de forma aleatoria",
-          src:
-            "https://ocioenlasierra.com/wp-content/uploads/2019/09/concierto-fiesta-1.jpg",
-          class: "display-3"
-        },
-        {
-          position: "center",
-          text: "Recomendaciones sólo para tí",
-          src:
-            "https://image.freepik.com/foto-gratis/dj-profesional-mezclador-musica-fiesta-concierto-electronico_118086-2831.jpg",
-          class: "display-3 white--text"
-        }
-      ],
-      items: [
-        { title: "Inicio", icon: "mdi-home", link: "/" },
-        { title: "Historial de canciones", icon: "mdi-headset", link: "/historial" },
-        { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
-        { title: "Ayuda", icon: "mdi-help", link: "/help" }
-      ],
-      types: ["Cualquiera", "Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
-      colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
-    };
-  },
-
-    /////////////////////
-   //     MOUNTED     //
-  /////////////////////
-  mounted() {
-    console.log("ESTOY EN MOUNTED");
-    this.filtros();
-    axios.get(direccionIp + "/getRandomSongs").then(response => {
-      this.aleatorios(response.data);
-    });
-    console.log("SALGO DE MOUNTED\n\n");
-  },
-
-    /////////////////////
-   //     MÉTODOS     //
-  /////////////////////
-  methods: {
-
-    /****** CARGAR LAS OPCIONES DE FILTROS ******/
-    filtros() {
-      this.rellenarGeneros();
-      this.rellenarArtistas();
     },
-
-    /****** RELLENAR GÉNEROS ******/
-    rellenarGeneros() {
-      console.log("ESTOY EN RELLENAR GENEROSSS");
-      if(this.generos.length <= 0){
-        axios.get(direccionIp + "/getGeneros").then(respuesta => {
-          for (var i = 0; i < respuesta.data.length; i++) {
-            this.generos.push(respuesta.data[i]);
-          }
-        });
-        this.generos.push("Cualquiera");
-        console.log("SALGO DE RELLENAR GENEROS\n\n");
-      }
-    },
-
-    /****** RELLENAR ARTISTAS ******/
-    rellenarArtistas() {
-      console.log("ESTOY EN RELLENAR ARTISTASSS");
-      axios.get(direccionIp + "/getArtistas").then(respuesta => {
-        for (var i = 0; i < respuesta.data.length; i++) {
-          this.artistas.push(respuesta.data[i]);
-        }
-      });
-      this.artistas.push("Cualquiera");
-      console.log("SALGO DE RELLENAR ARTISTAS\n\n");
-    },
-
-    /****** RANDOM SONG ******/
-    randomSong() {
-      console.log("ESTOY EN RANDOM SONG");
-      this.songs = [];
-      var random = Math.floor(Math.random() * this.generos.length);
-      var g = this.generos[random];
-      console.log(g);
-      axios.get(direccionIp + "/getRandomSongs",{
-          params:{
-            genre: g,
+    name: "App",
+    data() {
+      return {
+        name: "inicio",
+        busqueda: "",
+        drawer: false,
+        genre: "Cualquiera",
+        artist: "Cualquiera",
+        type: "Cualquiera",
+        num: 0,
+        aux: "",
+        songs: [],
+        generos: [],
+        artistas: [],
+        favs: [],
+        historial: [],
+        slides: [
+          {
+            position: "center",
+            text: "Descubre nuevos artistas",
+            src:
+              "https://elnuevopais.net/wp-content/uploads/2017/09/Bad-Bunny.jpg",
+            class: "display-3"
           },
-        }).then(respuesta => {
-          if(respuesta.data[0] == "No hay canciones"){
-            alert(respuesta.data[0]);
-          }else{
-            var random = Math.floor(Math.random() * respuesta.data.length);
-            var random2 = Math.floor(Math.random() * this.colors.length);
-            this.songs.push(respuesta.data[random]);
-            this.songs[0]["color"] = this.colors[random2];
+          {
+            position: "center",
+            text: "Encuentra música adaptada a tus gustos",
+            src:
+              "https://s1.eestatic.com/2020/07/03/invertia/empresas/Musica-Festivales_de_musica-Turismo-Mad_Cool-Benidorm-Coronavirus-Enfermedades_infecciosas-Infecciones-Impacto_coronavirus-Empresas_502461416_155038081_1706x960.jpg",
+            class: "display-3 white--text"
+          },
+          {
+            position: "center",
+            text: "Descubre música de forma aleatoria",
+            src:
+              "https://ocioenlasierra.com/wp-content/uploads/2019/09/concierto-fiesta-1.jpg",
+            class: "display-3"
+          },
+          {
+            position: "center",
+            text: "Recomendaciones sólo para tí",
+            src:
+              "https://image.freepik.com/foto-gratis/dj-profesional-mezclador-musica-fiesta-concierto-electronico_118086-2831.jpg",
+            class: "display-3 white--text"
           }
-        });
-        this.type = "Cualquiera";
-        this.artist = "Cualquiera";
-        this.busqueda = "";
-        this.genre = "Cualquiera";
-      console.log("SALGO DE RANDOM SONG\n\n");
+        ],
+        items: [
+          { title: "Inicio", icon: "mdi-home", link: "/" },
+          //{ title: "Historial de canciones", icon: "mdi-headset", link: "/historial" },
+          { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
+          { title: "Ayuda", icon: "mdi-help", link: "/help" }
+        ],
+        types: ["Cualquiera", "Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
+        colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
+      };  
     },
 
-    /****** GET SONG ******/
-    getSong() {
-      console.log("ESTOY EN GET SONG");
-      this.songs = [];
-      for(var i = 0; i < this.types.length; i++){
-        if(this.type == this.types[i]){
-          if(i == 0){
-            this.aux = "+animada";
-          }
-          else if(i == 1){
-            this.aux = "-animada";
-          }
-          else if(i == 2){
-            this.aux = "+bailable";
-          }
-          else if(i == 3){
-            this.aux = "-bailable";
-          }
-          else if(i == 4){
-           this.aux = "+energica";
-          }
-          else if(i == 5){
-            this.aux = "-energica";
-          }
-          else if(i == 6){
-            this.aux = "+popular";
-          }
-          else if(i == 7){
-            this.aux = "-popular";
+      /////////////////////
+     //     MOUNTED     //
+    /////////////////////
+    mounted() {
+      console.log("ESTOY EN MOUNTED");
+      this.filtros();
+      console.log("SALGO DE MOUNTED\n\n");
+    },
+
+      /////////////////////
+     //     MÉTODOS     //
+    /////////////////////
+    methods: {
+
+      /****** CAMBIAR PANTALLA ******/
+      cambiarPantalla(pantalla) {
+        if (pantalla == "/") {
+          this.$router.push({path: "/" });
+        }
+        else{
+          this.$router.push({ path: pantalla });
+        }
+      },
+
+      /****** AÑADIR A FAVORITAS ******/
+      addFavs(song){
+        console.log("Canción añadida a favoritas.");
+        axios.post(direccionIp + "/addFav", {
+            name: song.name,
+            artist: song.artist,
+        }).then(respuesta => {
+          console.log(respuesta.data)
+        });
+        this.favs.push(song);
+      },
+
+      /****** CARGAR LAS OPCIONES DE FILTROS ******/
+      filtros() {
+        this.rellenarGeneros();
+        this.rellenarArtistas();
+      },
+
+      /****** RELLENAR GÉNEROS ******/
+      rellenarGeneros() {
+        console.log("ESTOY EN RELLENAR GENEROSSS");
+        if(this.generos.length <= 0){
+          axios.get(direccionIp + "/getGeneros").then(respuesta => {
+            for (var i = 0; i < respuesta.data.length; i++) {
+              this.generos.push(respuesta.data[i]);
+            }
+          });
+          this.generos.push("Cualquiera");
+          console.log("SALGO DE RELLENAR GENEROS\n\n");
+        }
+      },
+
+      /****** RELLENAR ARTISTAS ******/
+      rellenarArtistas() {
+        console.log("ESTOY EN RELLENAR ARTISTASSS");
+          axios.get(direccionIp + "/getArtistas").then(respuesta => {
+            for (var i = 0; i < respuesta.data.length; i++) {
+              this.artistas.push(respuesta.data[i]);
+            }
+          });
+      
+        this.artistas.push("Cualquiera");
+        console.log("SALGO DE RELLENAR ARTISTAS\n\n");
+      },
+
+      /****** RELLENAR ARTISTAS ******/
+      rellenaArtistaG(genre) {
+        console.log("ESTOY EN RELLENAR ARTISTASSS");
+          axios.get(direccionIp + "/getArtistasG", {
+            params: {
+              genre: genre,
+            }
+          }).then(respuesta => {
+            this.artistas = [];
+            for (var i = 0; i < respuesta.data.length; i++) {
+              this.artistas.push(respuesta.data[i]);
+            }
+          });
+        this.artistas.push("Cualquiera");
+        console.log("SALGO DE RELLENAR ARTISTAS\n\n");
+      },
+
+      /****** RANDOM SONG ******/
+      randomSong() {
+        console.log("ESTOY EN RANDOM SONG");
+        this.songs = [];
+        var random = Math.floor(Math.random() * this.generos.length);
+        var g = this.generos[random];
+        axios.get(direccionIp + "/getRandomSongs",{
+            params:{
+              genre: g,
+            },
+          }).then(respuesta => {
+            if(respuesta.data[0] == "No hay canciones"){
+              alert(respuesta.data[0]);
+            }else{
+              var random = Math.floor(Math.random() * respuesta.data.length);
+              var random2 = Math.floor(Math.random() * this.colors.length);
+              this.songs.push(respuesta.data[random]);
+              this.songs[0]["color"] = this.colors[random2];
+            }
+          });
+          this.type = "Cualquiera";
+          this.artist = "Cualquiera";
+          this.busqueda = "";
+          this.genre = "Cualquiera";
+        console.log("SALGO DE RANDOM SONG\n\n");
+      },
+
+      /****** GET SONG ******/
+      getSong() {
+        console.log("ESTOY EN GET SONG");
+        this.songs = [];
+        if(this.type != "Cualquiera" && this.type != ""){
+          for(var i = 0; i < this.types.length; i++){
+            if(this.type == this.types[i]){
+              if(i == 1){
+                this.aux = "+animada";
+              }
+              else if(i == 2){
+                this.aux = "-animada";
+              }
+              else if(i == 3){
+                this.aux = "+bailable";
+              }
+              else if(i == 4){
+                this.aux = "-bailable";
+              }
+              else if(i == 5){
+              this.aux = "+energica";
+              }
+              else if(i == 6){
+                this.aux = "-energica";
+              }
+              else if(i == 7){
+                this.aux = "+popular";
+              }
+              else if(i == 8){
+                this.aux = "-popular";
+              }
+            }
           }
         }
-      }
-      var param = {
-        genre: this.genre,
-        artist: this.artist,
-        type: this.aux,
-        busqueda: this.busqueda,
-      };
-      this.historial.push(param);
-      axios.get(direccionIp + "/getSongs", { 
-        params:{
+        var param = {
           genre: this.genre,
           artist: this.artist,
           type: this.aux,
           busqueda: this.busqueda,
-        },
-      }).then(
-        respuesta => {
-          if(respuesta.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
-            alert(respuesta.data[0]);
-          }else{
-            console.log(this.busqueda);
-            console.log(respuesta.data.length);
-            this.num = 0;
-            for(var i = 0; i < respuesta.data.length; i++){
-              this.songs.push(respuesta.data[i]);
-              this.songs[i]["color"] = this.colors[this.num];
-              this.num = this.num + 1;
-              if(this.num == this.colors.length){
-                this.num = 0;
+        };
+        this.historial.push(param);
+        axios.get(direccionIp + "/getSongs", { 
+          params:{
+            genre: this.genre,
+            artist: this.artist,
+            type: this.aux,
+            busqueda: this.busqueda,
+          },
+        }).then(
+          respuesta => {
+            if(respuesta.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
+              alert(respuesta.data[0]);
+            }else{
+              this.num = 0;
+              for(var i = 0; i < respuesta.data.length; i++){
+                this.songs.push(respuesta.data[i]);
+                this.songs[i]["color"] = this.colors[this.num];
+                this.num = this.num + 1;
+                if(this.num == this.colors.length){
+                  this.num = 0;
+                }
               }
             }
+          });
+          this.aux = "";
+        console.log("SALGO DE GET SONG\n\n");
+      },
+
+      /****** GET FAVS ******/
+      getFavs() {
+          console.log("ESTOY en GETFAVS");
+          axios.get(direccionIp + "/getFavs").then(respuesta => {
+             for(var i = 0; i < respuesta.data.length; i++){
+                this.favs.push(respuesta.data[i]);
+             }
+          });
+      },
+
+      /****** PERSONALIZED SONG ******/
+      personalizedSong(){
+        console.log("Estamos en la función PERSONALIZED SONG");
+        var freqGenre = "";
+        var freqArtist = "";
+        var mostFrecGenre = 0;
+        var mostFrecArtist = 0;
+        var posibleGenres = [];
+        var posibleArtists = [];
+        this.songs = [];
+        this.getFavs();
+        for (var i = 0; i < this.favs.length; i++) {
+          var countGenre = 1;
+          var countArtist = 1;
+          for (var j = i; j < this.favs.length; j++) {
+            if (this.favs[i].genre == this.favs[j].genre) {
+              countGenre++;
+            }
+            if (mostFrecGenre < countGenre) {
+              mostFrecGenre = countGenre;
+              freqGenre = this.favs[i].genre;
+            }
+
+            if (this.favs[i].artist == this.favs[j].artist) {
+              countArtist++;
+            }
+            if (mostFrecArtist < countArtist) {
+              mostFrecArtist = countArtist;
+              freqArtist = this.favs[i].artist;
+            }
+          }
+        }
+        if (freqGenre == "" && freqArtist == "") {
+          console.log("No se puede dar una recomendación personalizada ya que no hay datos suficientes. La recomendación será aleatoria.");
+          var random = Math.floor(Math.random() * this.generos.length);
+          freqGenre = this.generos[random];      
+          var random2 = Math.floor(Math.random() * this.artistas.length);
+          freqArtist = this.artistas[random2];
+        }
+        else if(freqArtist == ""){
+          console.log("No hay artista frecuente");
+          axios.get(direccionIp + "/getArtistasG", {
+            params:{
+              genre: freqGenre,
+            },
+          }).then(respuesta => {
+            for (var i = 0; i < respuesta.data.length; i++) {
+              posibleArtists.push(respuesta.data[i]);
+            }
+          });
+          var random3 = Math.floor(Math.random() * this.posibleArtists.length);
+          freqArtist = this.posibleArtists[random3];      
+        }
+        else if(freqGenre == ""){
+          console.log("No hay genero frecuente");
+          axios.get(direccionIp + "/getGenerosA", {
+            params:{
+              artist: freqArtist,
+            },
+          }).then(respuesta => {
+            for (var i = 0; i < respuesta.data.length; i++) {
+              posibleGenres.push(respuesta.data[i]);
+            }
+          });
+          var random4 = Math.floor(Math.random() * this.posibleGenres.length);
+          freqGenre = this.posibleGenres[random4];      
+        }
+        this.genre = freqGenre,
+        this.artist = freqArtist,
+        console.log("GENERO FRECUENTE: " + this.genre);
+        console.log("ARTISTA FRECUENTE: " + this.artist);
+
+        axios.get(direccionIp + "/getPersonalizedSongs", {
+          params:{
+            genre: this.genre,
+            artist: this.artist,
+          },
+        }).then(response => {
+          if(response.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
+            alert(response.data[0]);
+          }else{
+            var randomm = Math.floor(Math.random() * response.data.length);
+            var randomC1 = Math.floor(Math.random() * this.colors.length);
+            this.songs.push(response.data[randomm]);
+            this.songs[0]["color"] = this.colors[randomC1];
           }
         });
-      console.log("SALGO DE GET SONG\n\n");
-    },
-
-    /////////////////////
-    // RECOMENDACIONES //
-    /////////////////////
-
-    aleatorios(response) {
-      console.log("ESTOY EN ALEATORIOOOOS");
-      for (var i = 0; i < response.length; i++) {
-        this.songs.push(response[i]);
-      }
-      this.songs = [];
-    },
-
-    recommend: function() {
-      var searchGenre = "";
-      var searchArtist = "";
-      var searchType = "";
-      console.log("Estamos en funcion RECOMMEND");
-
-      //var mostSearchGenre = 0;
-      //var mostSearchArtist = 0;
-      //var mostSearchType = 0;
-
-      //Bucle anidado For para buscar en el historial y recomendar
-
-      //Recomendación aleatoria
-      //HAY QUE COMPROBAR QUE DADOS LOS SIGUIENTES PARAMETROS EXISTE UNA CANCION
-      //¿SIEMPRE SALE EL MISMO? COMO LE RECOMENDAMOS UNA COMPLETAMENTE ALEATORIA?
-      if (searchGenre == "") {
-        var random = Math.floor(Math.random() * this.genres.length);
-        searchGenre = this.transform(this.genres[random]);
-        console.log("GENERO: ", searchGenre);
-      }
-      if (searchArtist == "") {
-        var random2 = Math.floor(Math.random() * this.artists.length);
-        searchArtist = this.transform(this.artists[random2]);
-      }
-      if (searchType == "") {
-        var random3 = Math.floor(Math.random() * this.types.length);
-        searchType = this.transform(this.types[random3]);
-      }
-
-      var params = {
-        genre: searchGenre,
-        artist: "", //searchArtist,
-        busqueda: "",
-        type: "" //searchType,
-      };
-
-      this.$http.post("http://localhost:3000/getSongs", params).then(
-        response => {
-          if (
-            response.body &&
-            response.body.length &&
-            response.body[0].message != "Error"
-          ) {
-            var random4 = Math.floor(Math.random() * response.body.length);
-            this.songs = [response.body[random4]];
-          } else {
-            response.body = [
-              {
-                name:
-                  "¡Ups! No se ha encontrado ninguna canción que cumpla los parámetros",
-                year: "--"
-              }
-            ];
-            this.songs = response.body;
-          }
-        },
-        response => {
-          alert("Ha habido un error en el envío: " + response.body);
+        if(this.songs.length == 0){
+          axios.get(direccionIp + "/getPersonalizedSongs", {
+            params:{
+              genre: this.genre,
+              artist: "",
+            },
+          }).then(response => {
+            if(response.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
+              alert(response.data[0]);
+            }else{
+              var randommm = Math.floor(Math.random() * response.data.length);
+              var randomC2 = Math.floor(Math.random() * this.colors.length);
+              this.songs.push(response.data[randommm]);
+              this.songs[0]["color"] = this.colors[randomC2];
+            }
+          });
         }
-      );
-      console.log("SALIMOS de funcion RECOMMEND\n\n");
+        this.type = "Cualquiera";
+        this.artist = "Cualquiera";
+        this.busqueda = "";
+        this.genre = "Cualquiera";
+        console.log("Salimos de la función PERSONALIZED SONG");
+      },
     }
-  }
-};
+  };
 </script>
 
 <style>
