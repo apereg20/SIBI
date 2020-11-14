@@ -62,6 +62,50 @@ app.get("/getArtistas",(req,res)=>{
   console.log("SALGO DE /getArtistas\n\n");
 });
 
+/****** GET ARTISTAS DE UN GÉNERO ******/
+app.get("/getArtistasG",(req,res)=>{
+  const session = driver.session();
+  console.log("Estoy en /getArtistasG");
+  var artistas=[];
+  var genre = req.query.genre;
+  var query="match(c:Canciones) where c.genre='" + genre + "'return distinct c.artist"
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+          artistas.push(result.get(0));
+      },
+      onCompleted: function () {
+          res.send(artistas);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO DE /getArtistasG\n\n");
+});
+
+/****** GET GÉNEROS DE UN ARTISTA ******/
+app.get("/getGenerosA",(req,res)=>{
+  const session = driver.session();
+  console.log("Estoy en /getGenerosA");
+  var generos=[];
+  var artist = req.query.artist;
+  var query="match(c:Canciones) where c.artist='" + artist + "'return distinct c.genre"
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+          generos.push(result.get(0));
+      },
+      onCompleted: function () {
+          res.send(generos);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO DE /getGenerosA\n\n");
+});
+
 /****** GET RANDOM SONGS ******/
 app.get("/getRandomSongs",(req,res)=>{
   console.log("Estoy en funcion /getRandomSongs");
@@ -69,7 +113,6 @@ app.get("/getRandomSongs",(req,res)=>{
   var genre = req.query.genre;
   var query = "Match(c:Canciones) where c.genre='" + genre + "' ";
   var lista = [];
-  console.log("GÉNERO: ",genre);
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
@@ -96,16 +139,11 @@ app.get("/getSongs",(req,res)=>{
   var type = req.query.type;
   var lista = [];
   var query = "MATCH (c: Canciones) "; 
-  console.log("GÉNERO: ",genre);
-  console.log("ARTISTA: ",artist);
-  console.log("ORDENAR POR: ", type);
-  console.log("BUSCAR POR: ", busqueda);
 
   //FILTRAR POR GÉNERO
   if(genre != "Cualquiera" && genre != ""){
     query += "where c.genre='" + genre + "' ";
   }
-
   //FILTRAR POR ARTISTA
   if(artist != "Cualquiera" && artist != ""){
       if(query.includes("where")){
@@ -123,9 +161,7 @@ app.get("/getSongs",(req,res)=>{
       query += " where (c.name =~ '(?i).*" + busqueda + ".*') ";
     }
   }
-
   query += "return c";
-
   //ORDENAR SEGÚN FILTROS
   if(type != "Cualquiera" && type != ""){
     if(type == "+animada"){
@@ -154,41 +190,19 @@ app.get("/getSongs",(req,res)=>{
       query += " order by c.popularity asc";
     }
   }
-
-  /*if (search != "" && platform != "Cualquiera") {
-    query = query.concat(" AND (v.name =~ '(?i).*" + search + ".*') ");
-  } else if (search != "") {
-    query = query.concat(" WHERE (v.name =~ '(?i).*" + search + ".*') ");
-  }
-
-  if (modern) {
-    query = query.concat(
-      "RETURN v AS videogame ORDER BY v.year DESC, v." +
-        critic +
-        " DESC LIMIT " +
-        limit
-    );
-  } else {
-    query = query.concat(
-      "RETURN s AS song ORDER BY s.Popularity" +
-        critic +
-        " DESC, s.year DESC LIMIT " +
-        limit
-    );
-  }*/
+  console.log(query);
   const resultadoPromesa = session.run(query).subscribe({
     onNext: function (result) {
         lista.push(result.get(0).properties);
-        console.log(result.get(0).properties.popularity);
+        console.log(result.get(0).properties);
     },
     onCompleted: function () {
         res.send(lista);
         console.log(lista);
-        console.log(query);
         session.close();
     },
     onError: function (error) {
-        console.log(error + " ERROR");
+        console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
     }
   })
   console.log("SALGO de /getSongs\n\n");
@@ -199,32 +213,103 @@ app.get("/getPersonalizedSongs",(req,res)=>{
   console.log("Estoy en funcion /getPersonalizedSongs");
   const session = driver.session();
   var genre = req.query.genre;
-  var query = "Match(c:Canciones) where c.genre='" + genre + "' ";
+  var artist = req.query.artist;
+  var query = "Match(c:Canciones) where c.genre='" + genre + "' and c.artist='"+artist+"' and c.fav='"+false+"' ";
   var lista = [];
-  console.log("GÉNERO: ",genre);
   query += "return c";
-  //var query="match(c:Canciones) where c.genre='"+searchGenre+"' return c";// order by c.Popularity desc limit 10";
   const resultadoPromesa = session.run(query).subscribe({
       onNext: function (result) {
           lista.push(result.get(0).properties);
       },
       onCompleted: function () {
           res.send(lista);
+          console.log(lista);
           session.close();
       },
       onError: function (error) {
-          console.log(error + " ERROR");
+          console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
       }
   })
   console.log("SALGO de /getPersonalizedSongs\n\n");
 });
 
+/****** GET FAVORITAS ******/
+app.get("/getFavs", function (req, res) {
+  console.log("ENTRO en /getFavs\n\n");
+  var lista = [];
+  var query = "Match(c:Canciones) where c.fav='"+true+"' ";
+  query += "return c";
+  const session = driver.session();
 
+  const resultadoPromesa = session.run(query).subscribe({
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        console.log(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + " ERROR");
+    }
+  })
+  console.log("SALGO de /getFavs\n\n");
+});
+
+/****** GET NO FAVORITAS ******/
+app.get("/getNoFavs", function (req, res) {
+  console.log("ENTRO en /getNoFavs\n\n");
+  var lista = [];
+  var query = "Match(c:Canciones) where c.fav='"+false+"' ";
+  query += "return c";
+  const session = driver.session();
+
+  const resultadoPromesa = session.run(query).subscribe({
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        console.log(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + " ERROR");
+    }
+  })
+  console.log("SALGO de /getFavs\n\n");
+});
+
+/****** POST FAVORITAS ******/
+app.post("/addFav", function (req, res) {
+  console.log("ENTRO en /addFav\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var lista = [];
+  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav='"+true+"' ";
+  query += "return c";
+  const session = driver.session();
+
+  const resultadoPromesa = session.run(query).subscribe({
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + " ERROR");
+    }
+  })
+  console.log("SALGO de /addFav\n\n");
+});
 
 ///////////////////////////////
 //         APPLISTEN         //
 ///////////////////////////////
 app.listen(port, function () {
     console.log("¡Aplicación escuchando en el puerto 3000!");
-  });
+})
   
