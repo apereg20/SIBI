@@ -19,6 +19,25 @@ app.use(bodyParser.urlencoded({ extended: true }));
 ///////////////////////////////
 //          APP GET         //
 //////////////////////////////
+/*
+const endpoint = "https://api.spotify.com/v1/recommendations";
+const params = {
+  'seed_artists': '6sFIWsNpZYqfjUpaCgueju',
+  'target_danceability': '0.9'
+};
+
+fetch(`${endpoint}?${qs.stringify(params)}`, {
+  method: "GET",
+  headers: {
+      Authorization: `Bearer ${userAccessToken}`     
+  }
+})
+.then(response => response.json())
+.then(({tracks})) => {
+  tracks.forEach(item => {
+    console.log(`${item.name} by ${item.artists[0].name}`);
+  })
+} */
 
 /****** GET GENEROS ******/
 app.get("/getGeneros",(req,res)=>{
@@ -143,8 +162,8 @@ app.get("/getSongs",(req,res)=>{
   query += "return c";
   //ORDENAR SEGÚN FILTROS
   console.log(type);
-  console.log(type.length);
-  for(var i = 0; i < type.length; i++){
+  if(type[0] == "No"){
+    for(var i = 0; i < type.length; i++){
       if(type[i] == "+animada"){
         if(i == 0){
           query += " order by c.valence desc";
@@ -210,6 +229,7 @@ app.get("/getSongs",(req,res)=>{
           query += ", c.popularity";
         }
       }
+    }
   }
   console.log(query);
   const resultadoPromesa = session.run(query).subscribe({
@@ -308,7 +328,7 @@ app.post("/addFav", function (req, res) {
   var name = req.body.name;
   var artist = req.body.artist;
   var lista = [];
-  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav='"+true+"' ";
+  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav=!fav ";
   query += "return c";
   const session = driver.session();
 
