@@ -464,6 +464,9 @@
             }
           }
         }
+        if(this.type.length == 0){
+          this.aux[0] = "No";
+        }
         var param = {
           genre: this.genre,
           artist: this.artist,
@@ -479,22 +482,26 @@
             busqueda: this.busqueda,
           },
         }).then(
-          respuesta => {
-            if(respuesta.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
-              alert(respuesta.data[0]);
-            }else{
-              this.num = 0;
-              for(var i = 0; i < respuesta.data.length; i++){
-                this.songs.push(respuesta.data[i]);
-                this.songs[i]["color"] = this.colors[this.num];
-                this.num = this.num + 1;
-                if(this.num == this.colors.length){
-                  this.num = 0;
-                }
+        respuesta => {
+          if(respuesta.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
+            alert(respuesta.data[0]);
+          }else{
+            this.num = 0;
+            for(var i = 0; i < respuesta.data.length; i++){
+              this.songs.push(respuesta.data[i]);
+              this.songs[i]["color"] = this.colors[this.num];
+              this.num = this.num + 1;
+              if(this.num == this.colors.length){
+                this.num = 0;
               }
             }
-          });
-          this.aux = [];
+          }
+        });
+        this.aux = [];
+        this.type = [];
+        this.artist = "Cualquiera";
+        this.busqueda = "";
+        this.genre = "Cualquiera";
         console.log("SALGO DE GET SONG\n\n");
       },
 
