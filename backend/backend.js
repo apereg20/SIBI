@@ -114,7 +114,8 @@ app.get("/getSongs",(req,res)=>{
   var genre = req.query.genre;
   var busqueda = req.query.busqueda;
   var artist = req.query.artist;
-  var type = req.query.type;
+  var type = [];
+  type = req.query.type;
   var lista = [];
   var query = "MATCH (c: Canciones) "; 
 
@@ -141,32 +142,74 @@ app.get("/getSongs",(req,res)=>{
   }
   query += "return c";
   //ORDENAR SEGÚN FILTROS
-  if(type != "Cualquiera" && type != ""){
-    if(type == "+animada"){
-      query += " order by c.valence desc";
-    }
-    else if(type == "-animada"){
-      query += " order by c.valence";
-    }
-    else if(type == "+bailable"){
-      query += " order by c.danceability desc";
-    }
-    else if(type == "-bailable"){
-      query += " order by c.danceability";
-    }
-    else if(type == "+energica"){
-      query += " order by c.energy desc";
-    }
-    else if(type == "-energica"){
-      query += " order by c.energy";
-    }
-    else if(type == "+popular"){
-      console.log("++POPULARR");
-      query += " order by c.popularity desc";
-    }
-    else if(type == "-popular"){
-      query += " order by c.popularity";
-    }
+  console.log(type);
+  console.log(type.length);
+  for(var i = 0; i < type.length; i++){
+      if(type[i] == "+animada"){
+        if(i == 0){
+          query += " order by c.valence desc";
+        }
+        else{
+          query += ", c.valence desc";
+        }
+      }
+      else if(type[i] == "-animada"){
+        if(i == 0){
+          query += " order by c.valence";
+        }
+        else{
+          query += ", c.valence";
+        }
+      }
+      else if(type[i] == "+bailable"){
+        if(i == 0){
+          query += " order by c.danceability desc";
+        }
+        else{
+          query += ", c.danceability desc";
+        }
+      }
+      else if(type[i] == "-bailable"){
+        if(i == 0){
+          query += " order by c.danceability";
+        }
+        else{
+          query += ", c.danceability";
+        }
+      }
+      else if(type[i] == "+energica"){
+        if(i == 0){
+          query += " order by c.energy desc";
+        }
+        else{
+          query += ", c.energy desc";
+        }
+      }
+      else if(type[i] == "-energica"){
+        if(i == 0){
+          query += " order by c.energy";
+        }
+        else{
+          query += ", c.energy";
+        }
+      }
+      else if(type[i] == "+popular"){
+        console.log("++POPULARR");
+        if(i == 0){
+          query += " order by c.popularity desc";
+        }
+        else{
+          query += ", c.popularity desc";
+        }
+      }
+      else if(type[i] == "-popular"){
+        if(i == 0){
+          query += " order by c.popularity";
+        }
+        else{
+          query += ", c.popularity";
+        }
+      }
   }
   console.log(query);
   const resultadoPromesa = session.run(query).subscribe({
