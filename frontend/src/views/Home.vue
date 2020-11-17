@@ -68,6 +68,8 @@
           background: -webkit-linear-gradient(to right, #110C3A, #351442, #4C1E45, #351442, #110C3A;
           background: linear-gradient(to right,  #110C3A, #351442, #4C1E45, #351442, #110C3A);"
           >
+            <!-- Separador -->
+            <v-spacer></v-spacer>
             <v-toolbar-title>
               Género:
               <v-combobox :items="generos" v-model="genre" outlined dense rounded ></v-combobox>
@@ -97,7 +99,9 @@
               Ordenar por:
               <v-combobox
                 :items="types"
+                label="Cualquiera"
                 v-model="type"
+                multiple="multiple"
                 outlined
                 dense
                 rounded
@@ -241,9 +245,9 @@
         drawer: false,
         genre: "Cualquiera",
         artist: "Cualquiera",
-        type: "Cualquiera",
+        type: [],
         num: 0,
-        aux: "",
+        aux: [],
         songs: [],
         generos: [],
         artistas: [],
@@ -285,7 +289,7 @@
           { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
           { title: "Ayuda", icon: "mdi-help", link: "/help" }
         ],
-        types: ["Cualquiera", "Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
+        types: ["Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
         colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
       };  
     },
@@ -308,6 +312,14 @@
           this.rellenaArtistaG(this.genre);
         }else{
           this.rellenarArtistas();
+        }
+      },
+      type:function() {
+        if(this.type.length > 2){
+          alert("Puede aplicar un máximo de 2 opciones de ordenación.");
+          for(var i = 2; i < this.type.length; i++){
+            this.type.splice(i, 1);
+          }
         }
       },
     },
@@ -409,7 +421,7 @@
               this.songs[0]["color"] = this.colors[random2];
             }
           });
-          this.type = "Cualquiera";
+          this.type = [];
           this.artist = "Cualquiera";
           this.busqueda = "";
           this.genre = "Cualquiera";
@@ -420,32 +432,34 @@
       getSong() {
         console.log("ESTOY EN GET SONG");
         this.songs = [];
-        if(this.type != "Cualquiera" && this.type != ""){
+        for(var j = 0; j < this.type.length; j++){
           for(var i = 0; i < this.types.length; i++){
-            if(this.type == this.types[i]){
-              if(i == 1){
-                this.aux = "+animada";
+            if(this.type[j] == this.types[i]){
+              console.log(this.type[j]);
+              console.log(this.types[i]);
+              if(i == 0){
+                this.aux[j] = "+animada";
+              }
+              else if(i == 1){
+                this.aux[j] = "-animada";
               }
               else if(i == 2){
-                this.aux = "-animada";
+                this.aux[j] = "+bailable";
               }
               else if(i == 3){
-                this.aux = "+bailable";
+                this.aux[j] = "-bailable";
               }
               else if(i == 4){
-                this.aux = "-bailable";
+              this.aux[j] = "+energica";
               }
               else if(i == 5){
-              this.aux = "+energica";
+                this.aux[j] = "-energica";
               }
               else if(i == 6){
-                this.aux = "-energica";
+                this.aux[j] = "+popular";
               }
               else if(i == 7){
-                this.aux = "+popular";
-              }
-              else if(i == 8){
-                this.aux = "-popular";
+                this.aux[j] = "-popular";
               }
             }
           }
@@ -480,7 +494,7 @@
               }
             }
           });
-          this.aux = "";
+          this.aux = [];
         console.log("SALGO DE GET SONG\n\n");
       },
 
@@ -598,7 +612,7 @@
             }
           });
         }
-        this.type = "Cualquiera";
+        this.type = [];
         this.artist = "Cualquiera";
         this.busqueda = "";
         this.genre = "Cualquiera";
