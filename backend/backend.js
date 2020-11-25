@@ -11,6 +11,10 @@ var driver = neo4j.driver(
   "bolt://localhost",
   neo4j.auth.basic("neo4j", "1")
 );
+var Spotify = require('spotify-web-api-js');
+var s = new Spotify();
+var spotifyApi = new SpotifyWebApi();
+spotifyApi.setAccessToken('d7796ea4b9024f24a769108838056641');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -38,6 +42,17 @@ fetch(`${endpoint}?${qs.stringify(params)}`, {
     console.log(`${item.name} by ${item.artists[0].name}`);
   })
 } */
+spotifyApi.getRecommendations({
+  min_energy: 0.4,
+  seed_artists: ['6mfK6Q2tzLMEchAr0e9Uzu', '4DYFVNKZ1uixa6SQTvzQwJ'],
+  min_popularity: 50
+})
+.then(function(data) {
+let recommendations = data.body;
+console.log(recommendations);
+}, function(err) {
+console.log("Something went wrong!", err);
+});
 
 /****** GET GENEROS ******/
 app.get("/getGeneros",(req,res)=>{
