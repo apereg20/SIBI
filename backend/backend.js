@@ -11,48 +11,15 @@ var driver = neo4j.driver(
   "bolt://localhost",
   neo4j.auth.basic("neo4j", "1")
 );
-var Spotify = require('spotify-web-api-js');
-var s = new Spotify();
-var spotifyApi = new SpotifyWebApi();
-spotifyApi.setAccessToken('d7796ea4b9024f24a769108838056641');
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
 ///////////////////////////////
 //          APP GET         //
 //////////////////////////////
-/*
-const endpoint = "https://api.spotify.com/v1/recommendations";
-const params = {
-  'seed_artists': '6sFIWsNpZYqfjUpaCgueju',
-  'target_danceability': '0.9'
-};
-
-fetch(`${endpoint}?${qs.stringify(params)}`, {
-  method: "GET",
-  headers: {
-      Authorization: `Bearer ${userAccessToken}`     
-  }
-})
-.then(response => response.json())
-.then(({tracks})) => {
-  tracks.forEach(item => {
-    console.log(`${item.name} by ${item.artists[0].name}`);
-  })
-} */
-spotifyApi.getRecommendations({
-  min_energy: 0.4,
-  seed_artists: ['6mfK6Q2tzLMEchAr0e9Uzu', '4DYFVNKZ1uixa6SQTvzQwJ'],
-  min_popularity: 50
-})
-.then(function(data) {
-let recommendations = data.body;
-console.log(recommendations);
-}, function(err) {
-console.log("Something went wrong!", err);
-});
 
 /****** GET GENEROS ******/
 app.get("/getGeneros",(req,res)=>{
@@ -270,71 +237,292 @@ app.get("/getPersonalizedSongs",(req,res)=>{
   const session = driver.session();
   var genre = req.query.genre;
   var artist = req.query.artist;
-  var query = "Match(c:Canciones) where c.genre='" + genre + "' and c.artist='"+artist+"' and c.fav='"+false+"' ";
+  var query = "Match(c:Canciones) where c.genre='" + genre + "' and c.artist='"+artist+"' and c.fav=0 ";
   var lista = [];
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-          res.send(lista);
-          console.log(lista);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
-      }
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
+    }
   })
   console.log("SALGO de /getPersonalizedSongs\n\n");
+});
+
+/****** GET SONGS COLABORATIVE FILTER ******/
+app.post("/getSongsColaborativeFilter",(req,res)=>{
+  console.log("ENTRO en /getSongsColaborativeFilter\n\n");
+  var usuario = req.body.usuario;
+  var name = "usuarioActual";
+  var canciones = [];
+  var query = "MATCH (c:Canciones), (u:UserName), (a:UserName), (u)-[:LIKES]->(c)"
+    +" WHERE u.name = '"+usuario+"' AND a.name = '"+name+"' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) "
+    +"RETURN c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence ";
+  const session = driver.session();
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {
+    if (result.records.length == 0) {
+      res.json({
+        msg: 'Error'
+      })
+    }
+    else {
+      console.log(query);
+      for(var i=0;i<result.records.length;i++){
+        var cancion = {
+          name: result.records[i]._fields[0],
+          artist: result.records[i]._fields[1],
+          genre: result.records[i]._fields[2],
+          cover: result.records[i]._fields[3],
+          preview: result.records[i]._fields[4],
+          danceability: result.records[i]._fields[5],
+          energy: result.records[i]._fields[6],
+          popularity: result.records[i]._fields[7],
+          valence: result.records[i]._fields[8],
+        }
+        console.log(cancion.name);
+        canciones.push(cancion);
+      }
+      res.send(canciones)
+    }
+    session.close();
+  })
+  .catch((error) => {
+    res.json({
+      msg: 'Error'
+    });
+    console.log(error)
+    session.close();
+  })
+  console.log("SALGO de /getSongsColaborativeFilter\n\n");
+});
+
+/****** GET NEIGHBOURS ******/
+app.post("/getNeighbours", function(req, res) {
+  console.log("ENTRO en Detectar Vecinos");
+  const session = driver.session();
+  console.log(req.body.name);
+  var vecinos = [];
+  var query = "MATCH (u:UserName), (u)-[:LIKES]->(c) WHERE c.name='"+req.body.name+"' RETURN u.name";
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {      
+    if (result.records.length == 0) {
+      res.json({
+        msg: 'Error'
+      })
+    }
+    else {
+      for(var i = 0; i < result.records.length; i++){
+          var usuario = {
+            name: result.records[i]._fields[0],
+          }
+          vecinos.push(result.records[i]._fields[0]);
+        }
+        res.send(vecinos)
+      }
+      session.close();
+    })
+    .catch((error) => {
+      res.json({
+        msg: 'Error'
+      });
+      console.log(error)
+      session.close();
+    })
 });
 
 /****** GET FAVORITAS ******/
 app.get("/getFavs", function (req, res) {
   console.log("ENTRO en /getFavs\n\n");
-  var lista = [];
-  var query = "Match(c:Canciones) where c.fav='"+true+"' ";
-  query += "return c";
+  var favoritas = [];
+  var query = "MATCH (u:UserName)-[rel:LIKES]->(c:Canciones) WHERE u.name='usuarioActual' ";
+  query += "return c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence";
   const session = driver.session();
-
-  const resultadoPromesa = session.run(query).subscribe({
-    onNext: function (result) {
-        lista.push(result.get(0).properties);
-    },
-    onCompleted: function () {
-        res.send(lista);
-        console.log(lista);
-        session.close();
-    },
-    onError: function (error) {
-        console.log(error + " ERROR");
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {   
+    if (result.records.length == 0) {
+        res.json({
+            msg: 'Error'
+        })
     }
+    else {
+      for(var i = 0; i < result.records.length; i++){
+        var cancion = {
+          name: result.records[i]._fields[0],
+          artist: result.records[i]._fields[1],
+          genre: result.records[i]._fields[2],
+          cover: result.records[i]._fields[3],
+          preview: result.records[i]._fields[4],
+          danceability: result.records[i]._fields[5],
+          energy: result.records[i]._fields[6],
+          popularity: result.records[i]._fields[7],
+          valence: result.records[i]._fields[8],
+        }
+        favoritas.push(cancion);
+      }
+      res.send(favoritas)
+    }
+    session.close();
+  })
+  .catch((error) => {
+    res.json({
+        msg: 'Error'
+    });
+    console.log(error)
+    session.close();
   })
   console.log("SALGO de /getFavs\n\n");
 });
 
-/****** GET NO FAVORITAS ******/
-app.get("/getNoFavs", function (req, res) {
-  console.log("ENTRO en /getNoFavs\n\n");
-  var lista = [];
-  var query = "Match(c:Canciones) where c.fav='"+false+"' ";
-  query += "return c";
+/****** GET HATEDS ******/
+app.get("/getHateds", function (req, res) {
+  console.log("ENTRO en /getHateds\n\n");
+  var nofavoritas = [];
+  var query = "MATCH (u:UserName)-[rel:HATES]->(c:Canciones) WHERE u.name='usuarioActual' ";
+  query += "return c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence";
   const session = driver.session();
-
-  const resultadoPromesa = session.run(query).subscribe({
-    onNext: function (result) {
-        lista.push(result.get(0).properties);
-    },
-    onCompleted: function () {
-        res.send(lista);
-        console.log(lista);
-        session.close();
-    },
-    onError: function (error) {
-        console.log(error + " ERROR");
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {   
+    if (result.records.length == 0) {
+        res.json({
+            msg: 'Error'
+        })
     }
+    else {
+      for(var i = 0; i < result.records.length; i++){
+        var cancion = {
+          name: result.records[i]._fields[0],
+          artist: result.records[i]._fields[1],
+          genre: result.records[i]._fields[2],
+          cover: result.records[i]._fields[3],
+          preview: result.records[i]._fields[4],
+          danceability: result.records[i]._fields[5],
+          energy: result.records[i]._fields[6],
+          popularity: result.records[i]._fields[7],
+          valence: result.records[i]._fields[8],
+        }
+        nofavoritas.push(cancion);
+      }
+      res.send(nofavoritas)
+    }
+    session.close();
   })
-  console.log("SALGO de /getFavs\n\n");
+  .catch((error) => {
+    res.json({
+        msg: 'Error'
+    });
+    console.log(error)
+    session.close();
+  })
+  console.log("SALGO de /getHateds\n\n");
+});
+
+/****** POST NEW USER ******/
+app.post("/postNewUser",function(req,res){
+  console.log("ENTRO en /postNewUser\n\n");
+  var lista = [];
+  var name = "usuarioActual";
+  var query = "MERGE (r:Users {name: 'Usuarios'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (u:UserName {name: 'usuarioActual'}) MERGE(u)-[:IS_USER]->(r))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+          res.send(lista);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewUser\n\n");
+});
+
+/****** POST NEW SONG LIKED ******/
+app.post("/postNewSongLiked",(req,res)=>{
+  console.log("ENTRO en /postNewSongLiked\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var lista = [];                                    
+  var query = "MATCH (u:UserName {name:'usuarioActual'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:LIKES]->(b))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        console.log(result.get(0));
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+          res.send(lista);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewSongLiked\n\n");
+});
+
+/****** POST NEW SONG HATED ******/
+app.post("/postNewSongHated",(req,res)=>{
+  console.log("ENTRO en /postNewSongHated\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var lista = [];                                    
+  var query = "MATCH (u:UserName {name:'usuarioActual'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:HATES]->(b))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+        res.send(lista);
+        session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewSongHated\n\n");
+});
+
+/****** POST DELETE RELATION ******/
+app.post("/postDeleteRelation",(req,res)=>{
+  console.log("ENTRO en /postDeleteRelation\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var type = req.body.type;
+  var lista = [];                                    
+  if(type == 0){
+    var query = "MATCH (c:Canciones), (c)<-[r:LIKES]- (u:UserName {name: 'usuarioActual'}) WHERE c.name='" + name + "' DETACH DELETE r";
+  }
+  else if(type == 1){
+    var query = "MATCH (c:Canciones), (c)<-[r:HATES]- (u:UserName {name: 'usuarioActual'}) WHERE c.name='" + name + "' DETACH DELETE r";
+
+  }
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        console.log(result.get(0));
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+          res.send(lista);
+          console.log(query);
+          console.log(lista);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postDeleteRelation\n\n");
 });
 
 /****** POST FAVORITAS ******/
@@ -343,7 +531,8 @@ app.post("/addFav", function (req, res) {
   var name = req.body.name;
   var artist = req.body.artist;
   var lista = [];
-  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav=!fav ";
+
+  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav="+1+" ";
   query += "return c";
   const session = driver.session();
 
@@ -361,6 +550,56 @@ app.post("/addFav", function (req, res) {
   })
   console.log("SALGO de /addFav\n\n");
 });
+
+/****** POST DISLIKE ******/
+app.post("/addDislike", function (req, res) {
+  console.log("ENTRO en /addDislike\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var lista = [];
+  var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav='"+2+"' ";
+  query += "return c";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + " ERROR");
+    }
+  })
+  console.log("SALGO de /addDislike\n\n");
+});
+
+/****** POST DELETE FAV / DISLIKE ******/
+app.post("/deleteFavDislike", function (req, res) {
+  console.log("ENTRO en /deleteFavDislike\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var lista = [];
+
+  var query = "Match (c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav='"+0+"' ";
+  query += "return c";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+    onNext: function (result) {
+        lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+        res.send(lista);
+        session.close();
+    },
+    onError: function (error) {
+        console.log(error + " ERROR");
+    }
+  })
+  console.log("SALGO de /deleteFavDislike\n\n");
+});
+
 
 ///////////////////////////////
 //         APPLISTEN         //
