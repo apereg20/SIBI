@@ -40,6 +40,8 @@
         Si quieres buscar alguna canción de un género o artista en concreto, o con alguna palabra en su nombre, selecciona los parámetros que deseas y pulsa sobre el botón "Buscar".<br>
         Cuándo busques canciones con tus filtros, podrás ordenarla según unos parámetros.<br>
         Si quieres una recomendación personalizada basada en tus gustos, solo tienes que pulsar sobre el botón "Recomiéndame algo personalizado".<br>
+        Si quieres una recomendación personalizada por medio de un filtro colaborativo, solo tienes que pulsar sobre el botón "Recomendación personalizada según los gustos de otros usuarios similares a ti"<br>
+        Esta recomendación utiliza un algoritmo de filtrado colaborativo que se encarga de buscar usuarios con gustos similares a los tuyos para poder recomendarte algo que te pueda gustar según  sus opiniones.<br>
         Siempre que te guste una canción podrás guardarla en tu lista de favoritos pulsando sobre el botón del corazón.<br>
         Puedes acceder a tu lista de canciones favoritas pulsando sobre el botón del corazón de la barra superior, o en el que se encuentra en el menú desplegable de la izquierda.<br><br>
         ¡Conoce mucha música nueva y diviértete!<br>

@@ -172,6 +172,8 @@
                         }
                     }
                 });
+                console.log(this.favoritas.length);
+                console.log(this.favoritas);
             },
         }
     }
