@@ -13,7 +13,7 @@
         <!-- Título -->
         <v-toolbar-title>
           <span style="font-size: 20pt; font-family: 'Helvetica'; weight:black">
-            MUSIC</span
+            MUSIC ~  {{ userName }}</span
           >
         </v-toolbar-title>
         <!-- Separador -->
@@ -22,9 +22,12 @@
         <v-btn icon @click="cambiarPantalla('/favoritas')">
           <v-icon>mdi-heart</v-icon>
         </v-btn>
+        <!-- Botón Cerrar Sesión -->
+        <v-btn icon @click="cambiarPantalla('/')">
+          <v-icon>mdi-exit-to-app</v-icon>
+        </v-btn>
       </v-toolbar>
     </v-card>
-  
     <v-sheet
       id="scrolling-techniques-3"
       class="overflow-y-auto"
@@ -180,11 +183,15 @@
                           <span style="color:transparent">holaaaa</span>
                           <!-- Botón Dislike -->
                           <v-btn icon @click="addDislike(song)">
-                            <v-icon>mdi-thumb-down-outline</v-icon>
+                            <v-icon> {{ song.iconD }} </v-icon>
+                            <!-- <v-icon v-if="estaEnFavs(song, i)">mdi-thumb-down</v-icon>
+                            <v-icon v-else>mdi-thumb-down-outline</v-icon> -->
                           </v-btn>
                           <!-- Botón Corazón -->
                           <v-btn icon @click="addFavs(song)">
-                            <v-icon>mdi-heart</v-icon>
+                            <v-icon> {{ song.iconF }} </v-icon>
+                            <!-- <v-icon id="segundoF" style="visibility:hidden; display:none">mdi-heart</v-icon> v-if="estaEnFavs(song, i)" 
+                            <v-icon id="primeroF" style="visibility:visible; display:block">mdi-heart-outline</v-icon>  v-else -->
                           </v-btn>
                           <span style="color:transparent">holaaaa</span>
                         </td>
@@ -250,6 +257,8 @@
 <script>
   const axios = require("axios");
   const direccionIp = "http://127.0.0.1:3000";
+  document.cookie = 'same-site-cookie=foo; SameSite=Lax'; 
+  document.cookie = 'cross-site-cookie=bar; SameSite=None; Secure';
   export default {
     props: {
       source: String
@@ -258,10 +267,14 @@
     data() {
       return {
         name: "inicio",
+        userName: "",
         busqueda: "",
         drawer: false,
         genre: "Cualquiera",
         artist: "Cualquiera",
+        changeIcon: "",
+        dni: this.$route.query.dni,
+        art: "",
         type: [],
         num: 0,
         aux: [],
@@ -306,10 +319,11 @@
           }
         ],
         items: [
-          { title: "Inicio", icon: "mdi-home", link: "/" },
+          { title: "Inicio", icon: "mdi-home", link: "/home" },
           //{ title: "Historial de canciones", icon: "mdi-headset", link: "/historial" },
           { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
-          { title: "Ayuda", icon: "mdi-help", link: "/help" }
+          { title: "Ayuda", icon: "mdi-help", link: "/help" },
+          { title: "Cerrar Sesión", icon: "mdi-exit-to-app", link: "/"}
         ],
         types: ["Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
         colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
@@ -320,7 +334,7 @@
      //     MOUNTED     //
     /////////////////////
     mounted() {
-      console.log("ESTOY EN MOUNTED");
+      console.log("ESTOY EN MOUNTED DE " + this.dni);
       this.filtros();
       console.log("SALGO DE MOUNTED\n\n");
     },
@@ -354,20 +368,51 @@
 
       /****** CAMBIAR PANTALLA ******/
       cambiarPantalla(pantalla) {
-        if (pantalla == "/") {
-          this.$router.push({path: "/" });
+        if (pantalla == "/home") {
+          this.$router.replace({path: "/home", query:{dni: this.dni} });
         }
         else{
-          this.$router.push({ path: pantalla });
+          this.$router.push({ path: pantalla, query:{dni: this.dni} });
         }
+      },
+
+      /****** GET NAME ******/
+      getName(){
+        axios.post(direccionIp + "/getUserName", {
+          dni: this.dni
+        }).then(response => {
+          var json = {msg: 'Error'};
+          if(JSON.stringify(response.data) == JSON.stringify(json)){
+              alert("Datos mal introducidos");
+          }
+          else{
+            console.log(response.data);
+            this.userName = response.data;
+          }
+        })
+      },
+
+      /****** ESTÁ EN FAVORITAS ******/
+      estaEnFavs(song, i){
+        console.log("Estoy en saber si una cancion esta en fav.");
+        if(i == 0){
+          this.getFavs();
+        }   
+        var estaEnFav = false;
+        setTimeout(() => {
+          for(var i = 0; i < this.favs.length; i++){
+            if(this.favs[i].name == song.name){
+              estaEnFav = true;
+              break;
+            }
+          }
+        }, 100);
+        return estaEnFav;
       },
 
       /****** AÑADIR A FAVORITAS ******/
       addFavs(song){
         console.log("Canción añadida a favoritas.");
-        axios.post(direccionIp + "/postNewUser").then(respuesta => {
-          console.log(respuesta.data);
-        });
         this.getFavs();
         this.getHateds();
         var aux = 3;
@@ -378,71 +423,79 @@
           for(var i = 0; i < this.favs.length; i++){
             if(this.favs[i].name == song.name){
               alert("Canción eliminada de favoritos.");
+              song.iconF = 'mdi-heart-outline';
+              this.filtros();
               has_like = true;
               aux = 0;
               break;
+            }
+            else{
+              console.log("Esta canción no estaba en favoritos");
             }
           }
           if(has_like == false){
             for(var j = 0; j < this.hateds.length; j++){
               if(this.hateds[j].name == song.name){
                 alert("Canción eliminada de lista de canciones que no te gustan.");
+                song.iconD = 'mdi-thumb-down-outline';
+                this.filtros();
                 has_dislike = true;
                 aux = 1;
                 break;
               }
+              else{
+                console.log("Esta canción no estaba en canciones que no te gustan");
+              }
             }
           }
           if(has_like == true || has_dislike == true){
+            console.log("Borro relaciones existentes");
             axios.post(direccionIp + "/postDeleteRelation", {
               name: song.name,
               artist: song.artist,
+              dni: this.dni,
               type: aux,
             }).then(respuesta => {
               console.log(respuesta.data);
             });
-            axios.post(direccionIp + "/deleteFavDislike", {
-                name: song.name,
-                artist: song.artist,
-            }).then(respuesta => {
-              console.log(respuesta.data);
-            });
+          }
+          else{
+            console.log("No existian relaciones");
           }
           this.getFavs();
           console.log(this.favs);
           if(has_like == false){
+            console.log("La añado a favoritos " + song.name);
             axios.post(direccionIp + "/postNewSongLiked", {
               name: song.name,
+              dni: this.dni,
               artist: song.artist,
             }).then(respuesta => {
               console.log(respuesta.data);
-              alert("Canción añadida a canciones favoritas.");
-            });
-            axios.post(direccionIp + "/addFav", {
-                name: song.name,
-                artist: song.artist,
-            }).then(respuesta => {
-              console.log(respuesta.data);
+              song.iconF = 'mdi-heart';
+              this.filtros();
+              //alert("Canción añadida a canciones favoritas.");
             });
           }
-        }, 300);
+        }, 100);
+        console.log("Salgo de añadir a favoritos");
       },
 
       /****** AÑADIR A NO ME GUSTAN ******/
       addDislike(song){
         console.log("Canción añadida a canciones que no te gustan.");
-        axios.post(direccionIp + "/postNewUser").then(respuesta => {
-          console.log(respuesta.data);
-        });
         this.getFavs();
         this.getHateds();
         var aux = 3;
         var has_like = false;
         var has_dislike = false;
         setTimeout(() => {
+          console.log("F: " + this.favs.length + " D: "+this.hateds.length);
           for(var i = 0; i < this.hateds.length; i++){
             if(this.hateds[i].name == song.name){
               alert("Canción eliminada de canciones que no te gustan.");
+              song.iconD = 'mdi-thumb-down-outline';
+              this.filtros();
               has_dislike = true;
               aux = 1;
               break;
@@ -452,6 +505,8 @@
             for(var j = 0; j < this.favs.length; j++){
               if(this.favs[j].name == song.name){
                 alert("Canción eliminada de favoritas.");
+                song.iconF = 'mdi-heart-outline';
+                this.filtros();
                 has_like = true;
                 aux = 0;
                 break;
@@ -461,14 +516,9 @@
           if(has_like == true || has_dislike == true){
             axios.post(direccionIp + "/postDeleteRelation", {
               name: song.name,
+              dni: this.dni,
               artist: song.artist,
               type: aux,
-            }).then(respuesta => {
-              console.log(respuesta.data);
-            });
-            axios.post(direccionIp + "/deleteFavDislike", {
-                name: song.name,
-                artist: song.artist,
             }).then(respuesta => {
               console.log(respuesta.data);
             });
@@ -476,16 +526,13 @@
           if(has_dislike == false){
             axios.post(direccionIp + "/postNewSongHated", {
               name: song.name,
+              dni: this.dni,
               artist: song.artist,
             }).then(respuesta => {
               console.log(respuesta.data);
-              alert("Canción añadida a canciones que no te gustan.");
-            });
-            axios.post(direccionIp + "/addDislike", {
-                name: song.name,
-                artist: song.artist,
-            }).then(respuesta => {
-              console.log(respuesta.data);
+              song.iconD = 'mdi-thumb-down';
+              this.filtros();
+              //alert("Canción añadida a canciones que no te gustan.");
             });
           }
         }, 100);
@@ -497,6 +544,7 @@
         this.artist="Cualquiera";
         this.rellenarGeneros();
         this.rellenarArtistas();
+        this.getName();
       },
 
       /****** RELLENAR GÉNEROS ******/
@@ -553,26 +601,60 @@
       randomSong() {
         console.log("ESTOY EN RANDOM SONG");
         this.songs = [];
-        var random = Math.floor(Math.random() * this.generos.length);
-        var g = this.generos[random];
-        axios.get(direccionIp + "/getRandomSongs",{
+        this.getFavs();
+        this.getHateds();
+        setTimeout(() =>{
+          var random = Math.floor(Math.random() * this.generos.length);
+          var g = this.generos[random];
+          axios.get(direccionIp + "/getRandomSongs",{
             params:{
               genre: g,
+              dni: this.dni,
             },
-          }).then(respuesta => {
-            if(respuesta.data[0] == "No hay canciones"){
-              alert(respuesta.data[0]);
-            }else{
-              var random = Math.floor(Math.random() * respuesta.data.length);
-              var random2 = Math.floor(Math.random() * this.colors.length);
-              this.songs.push(respuesta.data[random]);
-              this.songs[0]['color'] = this.colors[random2];
+          }).then(response => {
+            if(response.data[0] == " ERROR"){
+              alert(response.data[0]);
+            }
+            else {
+              if(response.data[0] == undefined){
+                this.randomSong();
+              }
+              else {
+                var valida = false;
+                do{
+                  var randomm = Math.floor(Math.random() * response.data.length);
+                  var inFav = false;
+                  var inHated = false;
+                  for(var x = 0; x < this.favs; x++){
+                    if(response.data[randomm].name == this.favs[x].name){
+                      inFav = true;
+                      break;
+                    }
+                  }
+                  if(inFav == false){
+                    for(var y = 0; y < this.hateds; y++){
+                      if(response.data[randomm].name == this.hateds[y].name){
+                        inHated = true;
+                        break;
+                      }
+                    }
+                  }
+                  if(inFav == false && inHated == false){
+                    this.songs.push(response.data[randomm]);
+                    valida = true;
+                  }
+                } while(valida == false);
+                this.songs[0].color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.songs[0].iconF = 'mdi-heart-outline';
+                this.songs[0].iconD = 'mdi-thumb-down-outline';
+              }
             }
           });
-          this.type = [];
-          this.artist = "Cualquiera";
-          this.busqueda = "";
-          this.genre = "Cualquiera";
+        }, 200);
+        this.type = [];
+        this.artist = "Cualquiera";
+        this.busqueda = "";
+        this.genre = "Cualquiera";
         console.log("SALGO DE RANDOM SONG\n\n");
       },
 
@@ -580,6 +662,8 @@
       getSong() {
         console.log("ESTOY EN GET SONG");
         this.songs = [];
+        this.getFavs();
+        this.getHateds();
         for(var j = 0; j < this.type.length; j++){
           for(var i = 0; i < this.types.length; i++){
             if(this.type[j] == this.types[i]){
@@ -615,13 +699,6 @@
         if(this.type.length == 0){
           this.aux[0] = "No";
         }
-        var param = {
-          genre: this.genre,
-          artist: this.artist,
-          type: this.aux,
-          busqueda: this.busqueda,
-        };
-        this.historial.push(param);
         axios.get(direccionIp + "/getSongs", { 
           params:{
             genre: this.genre,
@@ -637,10 +714,30 @@
             this.num = 0;
             for(var i = 0; i < respuesta.data.length; i++){
               this.songs.push(respuesta.data[i]);
-              this.songs[i]["color"] = this.colors[this.num];
+              this.songs[i].color = this.colors[this.num];
+              this.songs[i].iconF = 'mdi-heart-outline';
+              this.songs[i].iconD = 'mdi-thumb-down-outline';
               this.num = this.num + 1;
               if(this.num == this.colors.length){
                 this.num = 0;
+              }
+            }
+            for(var k = 0; k < this.songs.length; k++){
+              if(this.favs.length > 0){
+                for(var l = 0; l < this.favs.length; l++){
+                  if(this.songs[k].name == this.favs[l].name){
+                    this.songs[k].iconF = 'mdi-heart';
+                    l = this.favs.length;
+                  }
+                }
+              }
+              if(this.hateds.length > 0){
+                for(var m = 0; m < this.hateds.length; m++){
+                  if(this.songs[k].name == this.hateds[m].name){
+                    this.songs[k].iconD = 'mdi-thumb-down';
+                    m = this.hateds.length;
+                  }
+                }
               }
             }
           }
@@ -657,9 +754,11 @@
       getFavs() {
         this.favs = [];
         console.log("ESTOY en GETFAVS");
-        axios.get(direccionIp + "/getFavs").then(respuesta => {
+        axios.post(direccionIp + "/getFavs",{ 
+            dni: this.dni, 
+        }).then(respuesta => {
           var json = {msg: 'Error'};
-          if(JSON.stringify(respuesta.data)==JSON.stringify(json)){
+          if(JSON.stringify(respuesta.data) == JSON.stringify(json)){
             console.log('No tienes canciones favoritas.')
           }else{
             this.favs = respuesta.data;
@@ -671,7 +770,9 @@
       getHateds() {
         this.hateds = [];
         console.log("ESTOY en GETHATEDS");
-        axios.get(direccionIp + "/getHateds").then(respuesta => {
+        axios.post(direccionIp + "/getHateds",{ 
+            dni: this.dni, 
+          }).then(respuesta => {
           var json = {msg: 'Error'};
           if(JSON.stringify(respuesta.data) == JSON.stringify(json)){
             console.log('No tienes canciones odiadas.')
@@ -692,6 +793,7 @@
         var posibleArtists = [];
         this.songs = [];
         this.getFavs();
+        this.getHateds();
         setTimeout(() =>{
           for (var i = 0; i < this.favs.length; i++) {
             var countGenre = 1;
@@ -719,7 +821,6 @@
           setTimeout(()=> {
             for(var w = 0; w < this.artistas.length; w++){
               if(this.artistas[w] == freqArtist){
-                console.log("GGGGG");
                 console.log(this.artistas[w]);
                 generoArtista = true;
                 break;
@@ -731,7 +832,8 @@
             if (freqGenre == "" && freqArtist == "") {
               console.log("No se puede dar una recomendación personalizada ya que no hay datos suficientes. La recomendación será aleatoria.");
               var random = Math.floor(Math.random() * this.generos.length);
-              freqGenre = this.generos[random];      
+              freqGenre = this.generos[random];   
+              this.rellenaArtistaG(freqGenre);
               var random2 = Math.floor(Math.random() * this.artistas.length);
               freqArtist = this.artistas[random2];
             }
@@ -742,12 +844,24 @@
                   genre: freqGenre,
                 },
               }).then(respuesta => {
-                for (var i = 0; i < respuesta.data.length; i++) {
-                  posibleArtists.push(respuesta.data[i]);
+                if(respuesta.data[0] == undefined){
+                  this.personalizedSong();
                 }
-              });
-              var random3 = Math.floor(Math.random() * this.posibleArtists.length);
-              freqArtist = this.posibleArtists[random3];      
+                else{
+                  var au = 0;
+                  for (var i = 0; i < respuesta.data.length; i++) {
+                    posibleArtists.push(respuesta.data[i]);
+                    au = i;
+                  }
+                  if(au >= 1){
+                    var random3 = Math.floor(Math.random() * posibleArtists.length);
+                    freqArtist = posibleArtists[random3]; 
+                  }
+                  else {
+                    freqArtist = "";
+                  }
+                }
+              });   
             }
             else if(freqGenre == ""){
               console.log("No hay genero frecuente");
@@ -760,46 +874,63 @@
                   posibleGenres.push(respuesta.data[i]);
                 }
               });
-              var random4 = Math.floor(Math.random() * this.posibleGenres.length);
-              freqGenre = this.posibleGenres[random4];      
+              var random4 = Math.floor(Math.random() * posibleGenres.length);
+              freqGenre = posibleGenres[random4];      
             }
-            this.genre = freqGenre,
-            this.artist = freqArtist,
+            if(this.art != ""){
+              this.artist = freqArtist;
+            }
+            else{
+              this.artist = "";
+              this.art = "";
+            }
+            this.genre = freqGenre;
             console.log("GENERO FRECUENTE: " + this.genre);
             console.log("ARTISTA FRECUENTE: " + this.artist);
-
             axios.get(direccionIp + "/getPersonalizedSongs", {
               params:{
                 genre: this.genre,
                 artist: this.artist,
+                dni: this.dni,
               },
             }).then(response => {
               if(response.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
                 alert(response.data[0]);
               }else{
-                var randomm = Math.floor(Math.random() * response.data.length);
-                var randomC1 = Math.floor(Math.random() * this.colors.length);
-                this.songs.push(response.data[randomm]);
-                this.songs[0]['color'] = this.colors[randomC1];
+                if(response.data[0] == undefined){
+                  this.personalizedSong();
+                }
+                else{
+                  var valida = false;
+                  do{
+                    var randomm = Math.floor(Math.random() * response.data.length);
+                    var inFav = false;
+                    var inHated = false;
+                    for(var x = 0; x < this.favs; x++){
+                      if(response.data[randomm].name == this.favs[x].name){
+                        inFav = true;
+                        break;
+                      }
+                    }
+                    if(inFav == false){
+                      for(var y = 0; y < this.hateds; y++){
+                        if(response.data[randomm].name == this.hateds[y].name){
+                          inHated = true;
+                          break;
+                        }
+                      }
+                    }
+                    if(inFav == false && inHated == false){
+                      this.songs.push(response.data[randomm]);
+                      valida = true;
+                    }
+                  } while(valida == false);
+                  this.songs[0].color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                  this.songs[0].iconF = 'mdi-heart-outline';
+                  this.songs[0].iconD = 'mdi-thumb-down-outline';
+                }
               }
             });
-            if(this.songs.length == 0){
-              axios.get(direccionIp + "/getPersonalizedSongs", {
-                params:{
-                  genre: this.genre,
-                  artist: "",
-                },
-              }).then(response => {
-                if(response.data[0] == "No hay canciones que cumplan estos criterios de búsqueda."){
-                  alert(response.data[0]);
-                }else{
-                  var randommm = Math.floor(Math.random() * response.data.length);
-                  var randomC2 = Math.floor(Math.random() * this.colors.length);
-                  this.songs.push(response.data[randommm]);
-                  this.songs[0]['color'] = this.colors[randomC2];
-                }
-              });
-            }
             this.type = [];
             this.artist = "Cualquiera";
             this.busqueda = "";
@@ -814,15 +945,16 @@
         console.log("Estamos en la función COLABORATIVE FILTER Máximo de 5 canciones recomendadas");   
         // 1. Guardamos las canciones favoritas del usuario Principal
         this.getFavs();
+        this.getHateds();
         setTimeout(() =>{
-          //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
-          if(this.favs.length >= 3){
+          if(this.favs.length >= 5){
             this.usuariosVecinos = [];
             setTimeout(() =>{
+              //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
               this.buscarUsuariosVecinos();
-              //3. Nos quedamos con los que mas veces aparecen
               this.vecinosDepurados = [];
               setTimeout(() =>{
+                //3. Nos quedamos con los que mas veces aparecen
                 this.depurarUsuariosVecinos();
                   setTimeout(() => {
                     //4. Buscamos los que tengan un num de canciones favoritas (distintas de las que ama y odia el us principal) similar
@@ -838,7 +970,9 @@
                         this.num = 0;                  
                         for(var i = 0; i < this.songsDepuradas.length; i++){
                           this.songs.push(this.songsDepuradas[i]);
-                          this.songs[i]["color"] = this.colors[this.num];
+                          this.songs[i].color = this.colors[this.num];
+                          this.songs[i].iconF = 'mdi-heart-outline';
+                          this.songs[i].iconD = 'mdi-thumb-down-outline';
                           this.num = this.num + 1;
                           if(this.num == this.colors.length){
                             break;
@@ -860,13 +994,13 @@
           axios.post(direccionIp + "/getNeighbours",  {
             name: this.favs[i].name,
           }).then((response) => {
-            var json = {msg: 'Error'};
-            if(JSON.stringify(response.data) == JSON.stringify(json)){
+            var mensaje = {msg: 'Error, no hay usuarios vecinos'};
+            if(JSON.stringify(response.data[0]) == JSON.stringify(mensaje)){
               alert('Ups, se detectó un error, no hay usuarios vecinos.')
             }else{
               for(var j = 0; j < response.data.length; j++){
                 this.usuariosVecinos.push(response.data[j]);
-              }  
+              }
             }
           })
           .catch((error) => {
@@ -912,18 +1046,20 @@
       /****** DEPURAR USUARIOS POR CANCIONES ******/
       depurarUsuariosPorCanciones(){
         this.songsNoDepuradas = [];
-        for(var i=0;i<this.vecinosDepurados.length;i++){
+        for(var i = 0; i < this.vecinosDepurados.length; i++){
           axios.post(direccionIp + "/getSongsColaborativeFilter", {
-            usuario: this.vecinosDepurados[i]
+            usuario: this.vecinosDepurados[i],
+            dni: this.dni,
           })
           .then((response) => {
-            var json = {
-              msg: 'Error'
+            var mensaje = {
+              msg: 'Error, no hay canciones recomendadas por filtrado colaborativo'
             };
-            if(JSON.stringify(response.data) == JSON.stringify(json)){
+            if(JSON.stringify(response.data[0]) == JSON.stringify(mensaje)){
               alert('No hay canciones que mostrar por filtrado colaborativo.')
-            }else{
+            } else {
               for(var j = 0; j < response.data.length; j++){
+                console.log("USUARIOS DEPURADOS POR CANCIONES " + response.data[j]);
                 this.songsNoDepuradas.push(response.data[j]);
               }
             }
@@ -973,8 +1109,9 @@
           }
         }
         for(var y = 0; y < this.songsDepuradas.length; y++){
-           console.log(this.songsDepuradas[y].name+' '+this.songsDepuradas[y].num);
+          console.log(this.songsDepuradas[y].name+' '+this.songsDepuradas[y].num);
         }
+        console.log("Salimos de la función DEPURAR CANCIONES RECOMENDADAS");
       },
 
       /****** REORDENAR RECOMENDACIÓN ******/

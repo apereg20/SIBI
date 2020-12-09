@@ -128,11 +128,12 @@
     return {
       drawer: false,
       num: 0,
+      dni: this.$route.query.dni,
       historial: this.$route.query.historial,
       songs: [],
       colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
       items: [
-        { title: "Inicio", icon: "mdi-home", link: "/" },
+        { title: "Inicio", icon: "mdi-home", link: "/home" },
         { title: "Historial de canciones", icon: "mdi-headset", link: "/historial" },
         { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
         { title: "Ayuda", icon: "mdi-help", link: "/help" }
