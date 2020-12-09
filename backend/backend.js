@@ -28,16 +28,16 @@ app.get("/getGeneros",(req,res)=>{
   var generos=[];
   var query="match(c:Canciones) return distinct c.genre order by c.genre"
   const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          generos.push(result.get(0));
-      },
-      onCompleted: function () {
-          res.send(generos);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
+    onNext: function (result) {
+      generos.push(result.get(0));
+    },
+    onCompleted: function () {
+      res.send(generos);
+      session.close();
+    },
+    onError: function (error) {
+      console.log(error + " ERROR");
+    }
   })
   console.log("SALGO DE /getGeneros\n\n");
 });
@@ -49,16 +49,16 @@ app.get("/getArtistas",(req,res)=>{
   var artistas=[];
   var query="match(c:Canciones) return distinct c.artist order by c.artist"
   const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          artistas.push(result.get(0));
-      },
-      onCompleted: function () {
-          res.send(artistas);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
+    onNext: function (result) {
+      artistas.push(result.get(0));
+    },
+    onCompleted: function () {
+      res.send(artistas);
+      session.close();
+    },
+    onError: function (error) {
+      console.log(error + " ERROR");
+    }
   })
   console.log("SALGO DE /getArtistas\n\n");
 });
@@ -69,18 +69,19 @@ app.get("/getArtistasG",(req,res)=>{
   console.log("Estoy en /getArtistasG");
   var artistas=[];
   var genre = req.query.genre;
-  var query="match(c:Canciones) where c.genre='" + genre + "'return distinct c.artist order by c.artist"
+  var query="match(c:Canciones) where c.genre='" + genre 
+    + "'return distinct c.artist order by c.artist"
   const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          artistas.push(result.get(0));
-      },
-      onCompleted: function () {
-          res.send(artistas);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
+    onNext: function (result) {
+      artistas.push(result.get(0));
+    },
+    onCompleted: function () {
+      res.send(artistas);
+      session.close();
+    },
+    onError: function (error) {
+      console.log(error + " ERROR");
+    }
   })
   console.log("SALGO DE /getArtistasG\n\n");
 });
@@ -90,20 +91,21 @@ app.get("/getRandomSongs",(req,res)=>{
   console.log("Estoy en funcion /getRandomSongs");
   const session = driver.session();
   var genre = req.query.genre;
-  var query = "Match(c:Canciones) where c.genre='" + genre + "' ";
+  var dni = req.query.dni;
+  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) ";
   var lista = [];
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-          lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-          res.send(lista);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
+    onNext: function (result) {
+      lista.push(result.get(0).properties);
+    },
+    onCompleted: function () {
+      res.send(lista);
+      session.close();
+    },
+    onError: function (error) {
+      console.log(error + " ERROR");
+    }
   })
   console.log("SALGO de /getRandomSongs\n\n");
 });
@@ -119,18 +121,17 @@ app.get("/getSongs",(req,res)=>{
   type = req.query.type;
   var lista = [];
   var query = "MATCH (c: Canciones) "; 
-
   //FILTRAR POR GÉNERO
   if(genre != "Cualquiera" && genre != ""){
     query += "where c.genre='" + genre + "' ";
   }
   //FILTRAR POR ARTISTA
   if(artist != "Cualquiera" && artist != ""){
-      if(query.includes("where")){
-          query+="AND c.artist='"+artist+"' ";
-      }else{
-          query+="where c.artist='"+artist+"' ";
-      }
+    if(query.includes("where")){
+      query+="AND c.artist='"+artist+"' ";
+    }else{
+      query+="where c.artist='"+artist+"' ";
+    }
   }
   //FILTRAR POR NOMBRE BUSCADO
   if (busqueda != "") {
@@ -216,16 +217,16 @@ app.get("/getSongs",(req,res)=>{
   console.log(query);
   const resultadoPromesa = session.run(query).subscribe({
     onNext: function (result) {
-        lista.push(result.get(0).properties);
-        console.log(result.get(0).properties);
+      lista.push(result.get(0).properties);
+      console.log(result.get(0).properties);
     },
     onCompleted: function () {
-        res.send(lista);
-        console.log(lista);
-        session.close();
+      res.send(lista);
+      console.log(lista);
+      session.close();
     },
     onError: function (error) {
-        console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
+      console.log(error + "No hay canciones que cumplan estos criterios de búsqueda.");
     }
   })
   console.log("SALGO de /getSongs\n\n");
@@ -236,8 +237,9 @@ app.get("/getPersonalizedSongs",(req,res)=>{
   console.log("Estoy en funcion /getPersonalizedSongs");
   const session = driver.session();
   var genre = req.query.genre;
+  var dni = req.query.dni;
   var artist = req.query.artist;
-  var query = "Match(c:Canciones) where c.genre='" + genre + "' and c.artist='"+artist+"' and c.fav=0 ";
+  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c)"; // and c.artist='"+artist+"'
   var lista = [];
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
@@ -255,21 +257,176 @@ app.get("/getPersonalizedSongs",(req,res)=>{
   console.log("SALGO de /getPersonalizedSongs\n\n");
 });
 
+
+///////////////////////////////
+//          APP POST         //
+//////////////////////////////
+
+/****** POST NEW USER ******/
+app.post("/postNewUser", (req, res) => {
+  console.log("ENTRO en /postNewUser\n\n");
+  var nombre = req.body.nombre;
+  var contraseña = req.body.contraseña;
+  var email = req.body.email;
+  var dni = req.body.dni;
+  var query = "MERGE (r:Users {name: 'Usuarios'}) FOREACH (n IN (CASE WHEN '"+dni+"' IS NULL THEN [] ELSE [1] END) | MERGE (u:UserName {name: '" + nombre + "', dni: '" + dni + "', email: '" + email + "', passw: '" + contraseña + "' }) MERGE(u)-[:IS_USER]->(r))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+      },
+      onCompleted: function () {
+          res.send("si");
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewUser\n\n");
+});
+
+/****** DATOS ENTRADA ******/
+app.post("/datosEntrada", (req, res) => {
+  var pass = req.body.contraseña;
+  var dni = req.body.dni;
+  var query = "match(u:UserName) where u.dni='"+dni+"' and u.passw='" + pass + "' return u";
+  console.log(query);
+  const session = driver.session();
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {   
+    console.log(result.records[0]);
+    if (result.records.length == 0) {
+      res.json({
+        msg: 'Error, datos mal introducidos'
+      })
+    }
+    else {
+      var resultado = result.records[0].get(0);
+      res.send(resultado);
+    }
+    session.close();
+  })
+});
+
+/****** GET USER NAME ******/
+app.post("/getUserName", (req, res) => {
+  var dni = req.body.dni;
+  console.log(dni);
+  var query = "match(u:UserName) where u.dni='"+dni+"' return u.name";
+  console.log(query);
+  const session = driver.session();
+  const resultPromise = session.run(query);
+  resultPromise.then(result => {   
+    console.log(result.records[0]);
+    if (result.records.length == 0) {
+        res.json({
+          msg: 'Error'
+        })
+    }
+    else {
+      var resultado = result.records[0].get(0);
+      res.send(resultado);
+    }
+    session.close();
+  })
+});
+
+/****** POST NEW SONG LIKED ******/
+app.post("/postNewSongLiked",(req,res)=>{
+  console.log("ENTRO en /postNewSongLiked\n\n");
+  var name = req.body.name;
+  var dni = req.body.dni;
+  var artist = req.body.artist;
+  var lista = [];                                    
+  var query = "MATCH (u:UserName {dni:'" + dni + "'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:LIKES]->(b))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        console.log(result.get(0));
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+        res.send(lista);
+        session.close();
+      },
+      onError: function (error) {
+        console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewSongLiked\n\n");
+});
+
+/****** POST NEW SONG HATED ******/
+app.post("/postNewSongHated",(req,res)=>{
+  console.log("ENTRO en /postNewSongHated\n\n");
+  var name = req.body.name;
+  var artist = req.body.artist;
+  var dni = req.body.dni;
+  var lista = [];                                    
+  var query = "MATCH (u:UserName {dni:'" + dni + "'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:HATES]->(b))";
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+        res.send(lista);
+        session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postNewSongHated\n\n");
+});
+
+/****** POST DELETE RELATION ******/
+app.post("/postDeleteRelation",(req,res)=>{
+  console.log("ENTRO en /postDeleteRelation\n\n");
+  var name = req.body.name;
+  var dni = req.body.dni;
+  var type = req.body.type;
+  var lista = [];                                    
+  if(type == 0){
+    var query = "MATCH (c:Canciones), (c)<-[r:LIKES]- (u:UserName {dni: '" + dni + "'}) WHERE c.name='" + name + "' DETACH DELETE r";
+  }
+  else if(type == 1){
+    var query = "MATCH (c:Canciones), (c)<-[r:HATES]- (u:UserName {dni: '" + dni + "'}) WHERE c.name='" + name + "' DETACH DELETE r";
+  }
+  const session = driver.session();
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        console.log(result.get(0));
+        lista.push(result.get(0).properties);
+      },
+      onCompleted: function () {
+          res.send(lista);
+          console.log(query);
+          console.log(lista);
+          session.close();
+      },
+      onError: function (error) {
+          console.log(error + " ERROR");
+      }
+  })
+  console.log("SALGO de /postDeleteRelation\n\n");
+});
+
 /****** GET SONGS COLABORATIVE FILTER ******/
 app.post("/getSongsColaborativeFilter",(req,res)=>{
   console.log("ENTRO en /getSongsColaborativeFilter\n\n");
-  var usuario = req.body.usuario;
-  var name = "usuarioActual";
+  var usuarioVecino = req.body.usuario;
+  var dni = req.body.dni;
   var canciones = [];
   var query = "MATCH (c:Canciones), (u:UserName), (a:UserName), (u)-[:LIKES]->(c)"
-    +" WHERE u.name = '"+usuario+"' AND a.name = '"+name+"' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) "
+    +" WHERE u.dni = '" + usuarioVecino + "' AND a.dni= '" + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) "
     +"RETURN c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence ";
   const session = driver.session();
   const resultPromise = session.run(query);
   resultPromise.then(result => {
     if (result.records.length == 0) {
       res.json({
-        msg: 'Error'
+        msg: 'Error, no hay canciones recomendadas por filtrado colaborativo'
       })
     }
     else {
@@ -309,12 +466,12 @@ app.post("/getNeighbours", function(req, res) {
   const session = driver.session();
   console.log(req.body.name);
   var vecinos = [];
-  var query = "MATCH (u:UserName), (u)-[:LIKES]->(c) WHERE c.name='"+req.body.name+"' RETURN u.name";
+  var query = "MATCH (u:UserName), (u)-[:LIKES]->(c) WHERE c.name='" + req.body.name + "' RETURN u.dni";
   const resultPromise = session.run(query);
   resultPromise.then(result => {      
     if (result.records.length == 0) {
       res.json({
-        msg: 'Error'
+        msg: 'Error, no hay usuarios vecinos'
       })
     }
     else {
@@ -330,7 +487,7 @@ app.post("/getNeighbours", function(req, res) {
     })
     .catch((error) => {
       res.json({
-        msg: 'Error'
+        msg: 'Error, en getNeighbours'
       });
       console.log(error)
       session.close();
@@ -338,18 +495,19 @@ app.post("/getNeighbours", function(req, res) {
 });
 
 /****** GET FAVORITAS ******/
-app.get("/getFavs", function (req, res) {
+app.post("/getFavs", function (req, res) {
   console.log("ENTRO en /getFavs\n\n");
   var favoritas = [];
-  var query = "MATCH (u:UserName)-[rel:LIKES]->(c:Canciones) WHERE u.name='usuarioActual' ";
+  var dni = req.body.dni;
+  var query = "MATCH (u:UserName)-[rel:LIKES]->(c:Canciones) WHERE u.dni='" + dni + "' ";
   query += "return c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence";
   const session = driver.session();
   const resultPromise = session.run(query);
   resultPromise.then(result => {   
     if (result.records.length == 0) {
-        res.json({
-            msg: 'Error'
-        })
+      res.json({
+        msg: 'Error'
+      })
     }
     else {
       for(var i = 0; i < result.records.length; i++){
@@ -364,6 +522,7 @@ app.get("/getFavs", function (req, res) {
           popularity: result.records[i]._fields[7],
           valence: result.records[i]._fields[8],
         }
+        console.log(cancion);
         favoritas.push(cancion);
       }
       res.send(favoritas)
@@ -372,7 +531,7 @@ app.get("/getFavs", function (req, res) {
   })
   .catch((error) => {
     res.json({
-        msg: 'Error'
+      msg: 'Error'
     });
     console.log(error)
     session.close();
@@ -381,18 +540,19 @@ app.get("/getFavs", function (req, res) {
 });
 
 /****** GET HATEDS ******/
-app.get("/getHateds", function (req, res) {
+app.post("/getHateds", function (req, res) {
   console.log("ENTRO en /getHateds\n\n");
   var nofavoritas = [];
-  var query = "MATCH (u:UserName)-[rel:HATES]->(c:Canciones) WHERE u.name='usuarioActual' ";
+  var dni= req.body.dni;
+  var query = "MATCH (u:UserName)-[rel:HATES]->(c:Canciones) WHERE u.dni='"+dni+"' ";
   query += "return c.name, c.artist, c.genre, c.cover, c.preview, c.danceability, c.energy, c.popularity, c.valence";
   const session = driver.session();
   const resultPromise = session.run(query);
   resultPromise.then(result => {   
     if (result.records.length == 0) {
-        res.json({
-            msg: 'Error'
-        })
+      res.json({
+        msg: 'Error'
+      })
     }
     else {
       for(var i = 0; i < result.records.length; i++){
@@ -407,6 +567,7 @@ app.get("/getHateds", function (req, res) {
           popularity: result.records[i]._fields[7],
           valence: result.records[i]._fields[8],
         }
+        console.log(cancion);
         nofavoritas.push(cancion);
       }
       res.send(nofavoritas)
@@ -423,119 +584,15 @@ app.get("/getHateds", function (req, res) {
   console.log("SALGO de /getHateds\n\n");
 });
 
-/****** POST NEW USER ******/
-app.post("/postNewUser",function(req,res){
-  console.log("ENTRO en /postNewUser\n\n");
-  var lista = [];
-  var name = "usuarioActual";
-  var query = "MERGE (r:Users {name: 'Usuarios'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (u:UserName {name: 'usuarioActual'}) MERGE(u)-[:IS_USER]->(r))";
-  const session = driver.session();
-  const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-        lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-          res.send(lista);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
-  })
-  console.log("SALGO de /postNewUser\n\n");
-});
-
-/****** POST NEW SONG LIKED ******/
-app.post("/postNewSongLiked",(req,res)=>{
-  console.log("ENTRO en /postNewSongLiked\n\n");
-  var name = req.body.name;
-  var artist = req.body.artist;
-  var lista = [];                                    
-  var query = "MATCH (u:UserName {name:'usuarioActual'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:LIKES]->(b))";
-  const session = driver.session();
-  const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-        console.log(result.get(0));
-        lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-          res.send(lista);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
-  })
-  console.log("SALGO de /postNewSongLiked\n\n");
-});
-
-/****** POST NEW SONG HATED ******/
-app.post("/postNewSongHated",(req,res)=>{
-  console.log("ENTRO en /postNewSongHated\n\n");
-  var name = req.body.name;
-  var artist = req.body.artist;
-  var lista = [];                                    
-  var query = "MATCH (u:UserName {name:'usuarioActual'}) FOREACH (n IN (CASE WHEN '"+name+"' IS NULL THEN [] ELSE [1] END) | MERGE (b:Canciones {name:'"+name+"', artist:'"+artist+"'}) MERGE(u)-[l:HATES]->(b))";
-  const session = driver.session();
-  const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-        lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-        res.send(lista);
-        session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
-  })
-  console.log("SALGO de /postNewSongHated\n\n");
-});
-
-/****** POST DELETE RELATION ******/
-app.post("/postDeleteRelation",(req,res)=>{
-  console.log("ENTRO en /postDeleteRelation\n\n");
-  var name = req.body.name;
-  var artist = req.body.artist;
-  var type = req.body.type;
-  var lista = [];                                    
-  if(type == 0){
-    var query = "MATCH (c:Canciones), (c)<-[r:LIKES]- (u:UserName {name: 'usuarioActual'}) WHERE c.name='" + name + "' DETACH DELETE r";
-  }
-  else if(type == 1){
-    var query = "MATCH (c:Canciones), (c)<-[r:HATES]- (u:UserName {name: 'usuarioActual'}) WHERE c.name='" + name + "' DETACH DELETE r";
-
-  }
-  const session = driver.session();
-  const resultadoPromesa = session.run(query).subscribe({
-      onNext: function (result) {
-        console.log(result.get(0));
-        lista.push(result.get(0).properties);
-      },
-      onCompleted: function () {
-          res.send(lista);
-          console.log(query);
-          console.log(lista);
-          session.close();
-      },
-      onError: function (error) {
-          console.log(error + " ERROR");
-      }
-  })
-  console.log("SALGO de /postDeleteRelation\n\n");
-});
-
 /****** POST FAVORITAS ******/
 app.post("/addFav", function (req, res) {
   console.log("ENTRO en /addFav\n\n");
   var name = req.body.name;
   var artist = req.body.artist;
   var lista = [];
-
   var query = "Match(c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav="+1+" ";
   query += "return c";
   const session = driver.session();
-
   const resultadoPromesa = session.run(query).subscribe({
     onNext: function (result) {
         lista.push(result.get(0).properties);
@@ -581,7 +638,6 @@ app.post("/deleteFavDislike", function (req, res) {
   var name = req.body.name;
   var artist = req.body.artist;
   var lista = [];
-
   var query = "Match (c:Canciones) where c.name='"+name+"' and c.artist='"+artist+"' set c.fav='"+0+"' ";
   query += "return c";
   const session = driver.session();
