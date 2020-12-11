@@ -364,8 +364,11 @@
 
       /****** CAMBIAR PANTALLA ******/
       cambiarPantalla(pantalla) {
+        console.log(this.$route.path);
         if (pantalla == "/home") {
-          this.$router.replace({path: "/home", query:{dni: this.dni} });
+          this.songs = [];
+          this.filtros();
+          this.drawer = !this.drawer;
         }
         else{
           this.$router.push({ path: pantalla, query:{dni: this.dni} });
