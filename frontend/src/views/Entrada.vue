@@ -10,16 +10,12 @@
     >
         <!-- Título -->
         <v-toolbar-title>
-        <span style="font-size: 20pt; font-family: 'Helvetica'; weight:black">
-            BIENVENIDO</span
+        <span style="font-size: 20pt; font-family: 'Helvetica'; weight:bold-black">
+            BIENVENIDO ~ Recomendación Musical.</span
         >
         </v-toolbar-title>
         <!-- Separador -->
         <v-spacer></v-spacer>
-        <!-- Botón Corazón -->
-        <v-btn icon @click="cambiarPantalla('/')">
-        <v-icon>mdi-exit-to-app</v-icon>
-        </v-btn>
     </v-toolbar>
     </v-card>
     <v-card color="#110C3A" height="30px"></v-card>

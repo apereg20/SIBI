@@ -184,14 +184,10 @@
                           <!-- Botón Dislike -->
                           <v-btn icon @click="addDislike(song)">
                             <v-icon> {{ song.iconD }} </v-icon>
-                            <!-- <v-icon v-if="estaEnFavs(song, i)">mdi-thumb-down</v-icon>
-                            <v-icon v-else>mdi-thumb-down-outline</v-icon> -->
                           </v-btn>
                           <!-- Botón Corazón -->
                           <v-btn icon @click="addFavs(song)">
                             <v-icon> {{ song.iconF }} </v-icon>
-                            <!-- <v-icon id="segundoF" style="visibility:hidden; display:none">mdi-heart</v-icon> v-if="estaEnFavs(song, i)" 
-                            <v-icon id="primeroF" style="visibility:visible; display:block">mdi-heart-outline</v-icon>  v-else -->
                           </v-btn>
                           <span style="color:transparent">holaaaa</span>
                         </td>
@@ -490,7 +486,6 @@
         var has_like = false;
         var has_dislike = false;
         setTimeout(() => {
-          console.log("F: " + this.favs.length + " D: "+this.hateds.length);
           for(var i = 0; i < this.hateds.length; i++){
             if(this.hateds[i].name == song.name){
               alert("Canción eliminada de canciones que no te gustan.");
@@ -664,6 +659,7 @@
         this.songs = [];
         this.getFavs();
         this.getHateds();
+        console.log(this.type);
         for(var j = 0; j < this.type.length; j++){
           for(var i = 0; i < this.types.length; i++){
             if(this.type[j] == this.types[i]){
@@ -696,6 +692,7 @@
             }
           }
         }
+        console.log(this.type);
         if(this.type.length == 0){
           this.aux[0] = "No";
         }
@@ -815,7 +812,6 @@
               }
             }
           }
-          console.log("GENERO FRECUENTE: " +freqGenre);
           this.rellenaArtistaG(freqGenre);
           var generoArtista = false;
           setTimeout(()=> {
@@ -830,7 +826,8 @@
               freqArtist = "";
             }
             if (freqGenre == "" && freqArtist == "") {
-              console.log("No se puede dar una recomendación personalizada ya que no hay datos suficientes. La recomendación será aleatoria.");
+              console.log("No se puede dar una recomendación personalizada ya que no hay datos suficientes."  
+                    + "La recomendación será aleatoria.");
               var random = Math.floor(Math.random() * this.generos.length);
               freqGenre = this.generos[random];   
               this.rellenaArtistaG(freqGenre);
@@ -945,7 +942,6 @@
         console.log("Estamos en la función COLABORATIVE FILTER Máximo de 5 canciones recomendadas");   
         // 1. Guardamos las canciones favoritas del usuario Principal
         this.getFavs();
-        this.getHateds();
         setTimeout(() =>{
           if(this.favs.length >= 5){
             this.usuariosVecinos = [];
@@ -969,7 +965,13 @@
                         //Ponemos color a las canciones
                         this.num = 0;                  
                         for(var i = 0; i < this.songsDepuradas.length; i++){
-                          this.songs.push(this.songsDepuradas[i]);
+                          if(i > 2){
+                            var r = Math.floor(Math.random() * this.songsDepuradas.length);
+                            this.songs.push(this.songsDepuradas[r]);
+                          }
+                          else{
+                            this.songs.push(this.songsDepuradas[i]);
+                          }
                           this.songs[i].color = this.colors[this.num];
                           this.songs[i].iconF = 'mdi-heart-outline';
                           this.songs[i].iconD = 'mdi-thumb-down-outline';
@@ -1038,9 +1040,6 @@
           }
         }
         console.log("VECINOS DEPURADOS = "+this.vecinosDepurados.length);
-        //Eliminamos al propio usuario de la lista, al usuario actual
-        var borrar = this.vecinosDepurados.indexOf("usuarioActual");
-        this.vecinosDepurados.splice( borrar, 1 );
       },
 
       /****** DEPURAR USUARIOS POR CANCIONES ******/

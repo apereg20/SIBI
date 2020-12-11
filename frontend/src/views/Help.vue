@@ -11,7 +11,7 @@
         <!-- Título -->
         <v-toolbar-title>
           <span style="font-size: 20pt; font-family: 'Helvetica'; weight:black">
-            MUSIC
+            MENÚ DE AYUDA
           </span>
         </v-toolbar-title>
         <!-- Separador -->

@@ -52,6 +52,10 @@
                       </td>
                       <td valign="middle" align="center">
                         <span style="color:transparent">holaaaa</span>
+                        <!-- Botón Corazón -->
+                        <v-btn icon @click="deleteFavs(song)">
+                          <v-icon> {{ song.iconF }} </v-icon>
+                        </v-btn>
                         <span style="color:transparent">holaaaa</span>
                       </td>
                       <td valign="middle" align="center">
@@ -192,7 +196,9 @@
           this.num = 0;
           for (var i = 0; i < respuesta.data.length; i++) {
             this.favoritas.push(respuesta.data[i]);
-            this.favoritas[i]["color"] = this.colors[this.num];
+            this.favoritas[i].color = this.colors[this.num];
+            this.favoritas[i].iconF = 'mdi-heart';
+            this.favoritas[i].iconD = 'mdi-thumb-down-outline';
             this.num = this.num + 1;
             if(this.num == this.colors.length){
               this.num = 0;
@@ -203,6 +209,49 @@
           console.log(this.favoritas.length);
           console.log(this.favoritas);
         }, 200);
+      },
+
+      /****** ELIMINAR DE FAVORITAS ******/
+      deleteFavs(song){
+        console.log("Entro en eliminar de favoritos");
+        var aux = 2;
+        if(song.iconF == 'mdi-heart'){
+          alert("Canción eliminada de favoritos.");
+          song.iconF = 'mdi-heart-outline';
+          aux = 0;
+        }
+        else{
+          alert("Canción añadida a favoritos.");
+          song.iconF = 'mdi-heart';
+          aux = 1;
+        }
+        if(aux == 0){
+          axios.post(direccionIp + "/postDeleteRelation", {
+            name: song.name,
+            artist: song.artist,
+            dni: this.dni,
+            type: aux,
+          }).then(respuesta => {
+            console.log(respuesta.data);
+          });
+        }
+        if(aux == 1){
+          axios.post(direccionIp + "/postNewSongLiked", {
+            name: song.name,
+            dni: this.dni,
+            artist: song.artist,
+          }).then(respuesta => {
+            console.log(respuesta.data);
+          });
+        }
+        if(aux == 0){
+          var borrar = this.favoritas.indexOf(song.name);
+          this.favoritas.splice( borrar, 1 );
+        }
+        else{
+          this.favoritas.push(song);
+        }
+        console.log("Salgo de eliminar de favoritos");
       },
     }
   }
