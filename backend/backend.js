@@ -92,7 +92,8 @@ app.get("/getRandomSongs",(req,res)=>{
   const session = driver.session();
   var genre = req.query.genre;
   var dni = req.query.dni;
-  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) ";
+  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" 
+      + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c) ";
   var lista = [];
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
@@ -119,6 +120,7 @@ app.get("/getSongs",(req,res)=>{
   var artist = req.query.artist;
   var type = [];
   type = req.query.type;
+  console.log(req.query.type);
   var lista = [];
   var query = "MATCH (c: Canciones) "; 
   //FILTRAR POR GÉNERO
@@ -145,7 +147,7 @@ app.get("/getSongs",(req,res)=>{
   query += "return c";
   //ORDENAR SEGÚN FILTROS
   console.log(type);
-  if(type[0] == "No"){
+  if(type[0] != "No"){
     for(var i = 0; i < type.length; i++){
       if(type[i] == "+animada"){
         if(i == 0){
@@ -239,7 +241,8 @@ app.get("/getPersonalizedSongs",(req,res)=>{
   var genre = req.query.genre;
   var dni = req.query.dni;
   var artist = req.query.artist;
-  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c)"; // and c.artist='"+artist+"'
+  var query = "Match(c:Canciones), (a:UserName) where c.genre='" + genre + "' and a.dni='" 
+  + dni + "' AND NOT (a)-[:LIKES]->(c) AND NOT (a)-[:HATES]->(c)";
   var lista = [];
   query += "return c";
   const resultadoPromesa = session.run(query).subscribe({
