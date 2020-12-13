@@ -210,9 +210,11 @@
       /****** CAMBIAR PANTALLA ******/
       cambiarPantalla(pantalla) {
           if (pantalla == "/home") {
+            console.log(this.$route.path);
               this.$router.replace({path: "/home", query:{dni: this.dni}});
           }
           else{
+            console.log(this.$route.path);
               this.$router.push({ path: pantalla });
           }
       },
