@@ -19,11 +19,11 @@
         <!-- Separador -->
         <v-spacer></v-spacer>
         <!-- Botón Corazón -->
-        <v-btn icon @click="cambiarPantalla('/favoritas')">
+        <v-btn icon @click="cambiarPantalla('Favoritas')">
           <v-icon>mdi-heart</v-icon>
         </v-btn>
         <!-- Botón Cerrar Sesión -->
-        <v-btn icon @click="cambiarPantalla('/')">
+        <v-btn icon @click="cambiarPantalla('Entrada')">
           <v-icon>mdi-exit-to-app</v-icon>
         </v-btn>
       </v-toolbar>
@@ -315,11 +315,11 @@
           }
         ],
         items: [
-          { title: "Inicio", icon: "mdi-home", link: "/home" },
+          { title: "Inicio", icon: "mdi-home", link: "Home" },
           //{ title: "Historial de canciones", icon: "mdi-headset", link: "/historial" },
-          { title: "Favoritos", icon: "mdi-heart", link: "/favoritas" },
-          { title: "Ayuda", icon: "mdi-help", link: "/help" },
-          { title: "Cerrar Sesión", icon: "mdi-exit-to-app", link: "/"}
+          { title: "Favoritos", icon: "mdi-heart", link: "Favoritas" },
+          { title: "Ayuda", icon: "mdi-help", link: "Help" },
+          { title: "Cerrar Sesión", icon: "mdi-exit-to-app", link: "Entrada"}
         ],
         types: ["Más Animadas primero", "Menos Animadas primero","Más Bailables primero", "Menos Bailables primero", "Más Enérgicas primero", "Más Tranquilas primero", "Más Populares primero", "Menos Populares primero"],
         colors: ["#952175", "#00ACC1", "#FFB300", "#E91E63", "#8BC34A"],
@@ -365,13 +365,13 @@
       /****** CAMBIAR PANTALLA ******/
       cambiarPantalla(pantalla) {
         console.log(this.$route.path);
-        if (pantalla == "/home") {
+        if (pantalla == "Home") {
           this.songs = [];
           this.filtros();
           this.drawer = !this.drawer;
         }
         else{
-          this.$router.push({ path: pantalla, query:{dni: this.dni} });
+          this.$router.push({ name: pantalla, query:{dni: this.dni} });
         }
       },
 

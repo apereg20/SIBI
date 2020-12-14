@@ -57,6 +57,9 @@
         return {
         dni: "",
         contraseña: "",
+        alerta: false,
+        tipoAlerta: "",
+        textoAlerta: "",
         };
     },
 
@@ -68,7 +71,7 @@
         /****** CAMBIAR PANTALLA ******/
         cambiarPantalla(pantalla) {
             if (pantalla == "/home") {
-                this.$router.replace({path: "/home", query:{dni: this.dni} });
+                this.$router.push({path: "/home", query:{dni: this.dni} });
             }
             else{
                 this.$router.push({ path: pantalla});
@@ -79,20 +82,41 @@
         comprobarInicioSesion() {
             console.log(this.dni);
             console.log(this.contraseña);
-            axios.post(direccionIp + "/datosEntrada",{ 
-                dni: this.dni, 
-                contraseña: this.contraseña
-            }).then(response => {
-                var json = {msg: 'Error, datos mal introducidos'};
-                console.log(response.data[0]);
-                if(JSON.stringify(response.data[0]) == JSON.stringify(json)){
-                    alert("Datos mal introducidos");
-                }
-                else{
-                    this.$emit("entro", this.dni);
-                    this.cambiarPantalla("/home");
-                }
-            });
+            this.alerta = false;
+            if (this.dni == "" && this.contraseña == "") {
+                this.tipoAlerta = "error";
+                this.alerta = true;
+                this.textoAlerta = "Por favor, introduce usuario y contraseña";
+            } else if (this.dni == "") {
+                this.tipoAlerta = "error";
+                this.alerta = true;
+
+                this.textoAlerta = "Por favor, introduce tu usuario";
+            } else if (this.contrasenña == "") {
+                this.tipoAlerta = "error";
+                this.alerta = true;
+                this.textoAlerta = "Por favor, introduce tu contraseña";
+            } else {
+                axios.post(direccionIp + "/datosEntrada",{ 
+                    dni: this.dni, 
+                    contraseña: this.contraseña
+                }).then(response => {
+                    var json = {msg: 'Error, datos mal introducidos'};
+                    console.log(response.data[0]);
+                    if(JSON.stringify(response.data[0]) == JSON.stringify(json)){
+                        this.tipoAlerta = "error";
+                        this.alerta = true;
+                        this.textoAlerta = "Los datos introducidos son incorrectos"
+                    }
+                    else{
+                        this.$emit("entro", this.dni);
+                        this.cambiarPantalla("/home");
+                    }
+                })
+                .catch((alerta) => {
+                    console.log(alerta);
+                });
+            }
         },
     },
 };

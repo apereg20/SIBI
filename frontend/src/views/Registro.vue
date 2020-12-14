@@ -17,7 +17,7 @@
         <!-- Separador -->
         <v-spacer></v-spacer>
         <!-- Botón Corazón -->
-        <v-btn icon @click="cambiarPantalla('/')">
+        <v-btn icon @click="cambiarPantalla('Entrada')">
           <v-icon>mdi-exit-to-app</v-icon>
         </v-btn>
       </v-toolbar>
@@ -49,7 +49,7 @@
                 <v-text-field label="Nombre" type="text" prepend-icon="mdi-account-box" v-model="nombre"/>
                 <v-text-field label="DNI" type="text" prepend-icon="mdi-smart-card" v-model="dni"/>
                 <v-text-field label="email" type="text" prepend-icon="mdi-gmail" v-model="email"/>
-                <v-text-field label="Contraseña" type="password" prepend-icon="mdi-lock" v-model="contraseña"/>
+                <v-text-field label="Contraseña" type="password" prepend-icon="mdi-lock" v-model="contraseña"  v-on:keyup.enter="mostrar"/>
               </v-form>
             </v-card-text>
             <v-card-actions>
@@ -209,13 +209,13 @@
 
       /****** CAMBIAR PANTALLA ******/
       cambiarPantalla(pantalla) {
-          if (pantalla == "/home") {
+          if (pantalla == "Home") {
             console.log(this.$route.path);
-              this.$router.replace({path: "/home", query:{dni: this.dni}});
+              this.$router.push({name: "Home", query:{dni: this.dni}});
           }
           else{
             console.log(this.$route.path);
-              this.$router.push({ path: pantalla });
+              this.$router.push({ name: pantalla });
           }
       },
 
@@ -225,7 +225,7 @@
         if (respuesta === "si") {
           alert("Usuario " + this.dni + " Introducido");
           this.$emit("entro", this.dni);
-          this.cambiarPantalla("/home");
+          this.cambiarPantalla("Home");
         } else {
           alert("Ya existe un usuario con DNI:" + this.dni);
         }
