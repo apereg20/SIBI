@@ -223,7 +223,7 @@
       comprobarRespuesta(respuesta) {
           console.log(respuesta);
         if (respuesta === "si") {
-          alert("Usuario " + this.dni + " Introducido");
+          alert("Bienvenido: " + this.nombre );
           this.$emit("entro", this.dni);
           this.cambiarPantalla("Home");
         } else {

@@ -57,6 +57,7 @@
         return {
         dni: "",
         contraseña: "",
+        userName: "",
         alerta: false,
         tipoAlerta: "",
         textoAlerta: "",
@@ -76,6 +77,21 @@
             else{
                 this.$router.push({ path: pantalla});
             }
+        },
+        /****** GET NAME ******/
+        getName(){
+            axios.post(direccionIp + "/getUserName", {
+            dni: this.dni
+            }).then(response => {
+                var json = {msg: 'Error'};
+                if(JSON.stringify(response.data) == JSON.stringify(json)){
+                    alert("Datos mal introducidos");
+                }
+                else{
+                    console.log(response.data);
+                    this.userName = response.data;
+                }
+            })
         },
        
        /****** COMPROBAR INICIO DE SESIÓN ******/
@@ -110,7 +126,11 @@
                     }
                     else{
                         this.$emit("entro", this.dni);
-                        this.cambiarPantalla("/home");
+                        this.getName();
+                        setTimeout(() => {
+                            alert("Bienvenido " + this.userName);
+                            this.cambiarPantalla("/home");
+                        }, 100);
                     }
                 })
                 .catch((alerta) => {

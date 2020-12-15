@@ -200,8 +200,15 @@
                     </table>
                   </div>
                 </v-card>
-              </v-col>
+              </v-col>          
             </v-col>
+            <v-col cols="12">
+              <!-- Bucle que recorre todos los elementos de la lista itemsMusic -->
+              <v-col cols="flex">
+            <div class="d-flex flex-no-wrap justify-space-between">
+            <v-btn v-if="visible" id="botonMostrarMas" dark cols="flex" valign="middle" align="center" @click="getAllRecommendSongs()" style="background: #4C1E45;">¡Mostrar más!</v-btn>
+            </div>
+              </v-col></v-col>
           </v-row>
         </v-layout>
       </v-container>
@@ -271,6 +278,7 @@
         changeIcon: "",
         dni: this.$route.query.dni,
         art: "",
+        visible: false,
         type: [],
         num: 0,
         aux: [],
@@ -662,12 +670,9 @@
         this.songs = [];
         this.getFavs();
         this.getHateds();
-        console.log(this.type);
         for(var j = 0; j < this.type.length; j++){
           for(var i = 0; i < this.types.length; i++){
             if(this.type[j] == this.types[i]){
-              console.log(this.type[j]);
-              console.log(this.types[i]);
               if(i == 0){
                 this.aux[j] = "+animada";
               }
@@ -695,7 +700,6 @@
             }
           }
         }
-        console.log(this.type);
         if(this.type.length == 0){
           this.aux[0] = "No";
         }
@@ -820,7 +824,6 @@
           setTimeout(()=> {
             for(var w = 0; w < this.artistas.length; w++){
               if(this.artistas[w] == freqArtist){
-                console.log(this.artistas[w]);
                 generoArtista = true;
                 break;
               }
@@ -829,7 +832,7 @@
               freqArtist = "";
             }
             if (freqGenre == "" && freqArtist == "") {
-              console.log("No se puede dar una recomendación personalizada ya que no hay datos suficientes."  
+              alert("No se puede dar una recomendación personalizada ya que no hay datos suficientes. "  
                     + "La recomendación será aleatoria.");
               var random = Math.floor(Math.random() * this.generos.length);
               freqGenre = this.generos[random];   
@@ -885,8 +888,6 @@
               this.art = "";
             }
             this.genre = freqGenre;
-            console.log("GENERO FRECUENTE: " + this.genre);
-            console.log("ARTISTA FRECUENTE: " + this.artist);
             axios.get(direccionIp + "/getPersonalizedSongs", {
               params:{
                 genre: this.genre,
@@ -944,53 +945,100 @@
       colaborativeFilter: function(){
         console.log("Estamos en la función COLABORATIVE FILTER Máximo de 5 canciones recomendadas");   
         // 1. Guardamos las canciones favoritas del usuario Principal
+        var oldFavs = this.favs.length;
         this.getFavs();
         setTimeout(() =>{
           if(this.favs.length >= 5){
-            this.usuariosVecinos = [];
-            setTimeout(() =>{
-              //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
-              this.buscarUsuariosVecinos();
-              this.vecinosDepurados = [];
+            if(this.favs.length == oldFavs){
+              this.num = 0;  
+              this.songs = [];
+              if(this.songsDepuradas.length > 5){
+                this.visible = true;
+                alert("Mostrando las 5 canciones más recomendadas ordenadas de más a menos recomendadas. Pulsa el botón 'Mostrar Más' para ver todas las canciones recomendadas.");
+              }
+              else{
+                alert("Mostrando las canciones más recomendadas ordenadas de más a menos recomendadas. Sigue descubriendo música para obtener más recomendaciones.");
+              }
+              //Recomendamos las 5 canciones con más coincidencias                 
+              for(var i = 0; i < this.songsDepuradas.length; i++){
+                this.songs.push(this.songsDepuradas[i]);
+                this.songs[i].color = this.colors[this.num];
+                this.songs[i].iconF = 'mdi-heart-outline';
+                this.songs[i].iconD = 'mdi-thumb-down-outline';
+                this.num = this.num + 1;
+                if(this.num == this.colors.length){
+                  break;
+                }
+              }
+            }
+            else{
+              this.usuariosVecinos = [];
               setTimeout(() =>{
-                //3. Nos quedamos con los que mas veces aparecen
-                this.depurarUsuariosVecinos();
-                  setTimeout(() => {
-                    //4. Buscamos los que tengan un num de canciones favoritas (distintas de las que ama y odia el us principal) similar
-                    this.depurarUsuariosPorCanciones();
+                //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
+                this.buscarUsuariosVecinos();
+                this.vecinosDepurados = [];
+                setTimeout(() =>{
+                  //3. Nos quedamos con los que mas veces aparecen
+                  this.depurarUsuariosVecinos();
                     setTimeout(() => {
-                      //5. Buscamos las canciones mas coincidentes entre los usuarios
-                      this.depurarCancionesRecomendadas();
+                      //4. Buscamos los que tengan un num de canciones favoritas (distintas de las que ama y odia el us principal) similar
+                      this.depurarUsuariosPorCanciones();
                       setTimeout(() => {
-                        this.songs = [];
-                        //Reordenamos las canciones
-                        this.reordenarRecomendacion();
-                        //Ponemos color a las canciones
-                        this.num = 0;                  
-                        for(var i = 0; i < this.songsDepuradas.length; i++){
-                          if(i > 2){
-                            var r = Math.floor(Math.random() * this.songsDepuradas.length);
-                            this.songs.push(this.songsDepuradas[r]);
+                        //5. Buscamos las canciones mas coincidentes entre los usuarios
+                        this.depurarCancionesRecomendadas();
+                        setTimeout(() => {
+                          this.songs = [];
+                          //Reordenamos las canciones
+                          this.reordenarRecomendacion();
+                          //Ponemos color a las canciones
+                          this.num = 0;  
+                          if(this.songsDepuradas.length > 5){
+                            this.visible = true;
+                            alert("Mostrando las 5 canciones más recomendadas ordenadas de más a menos recomendadas. Pulsa el botón 'Mostrar Más' para ver todas las canciones recomendadas.");
                           }
                           else{
+                            alert("Mostrando las canciones más recomendadas ordenadas de más a menos recomendadas. Sigue descubriendo música para obtener más recomendaciones.");
+                          }
+                          //Recomendamos las 5 canciones con más coincidencias                 
+                          for(var i = 0; i < this.songsDepuradas.length; i++){
                             this.songs.push(this.songsDepuradas[i]);
+                            this.songs[i].color = this.colors[this.num];
+                            this.songs[i].iconF = 'mdi-heart-outline';
+                            this.songs[i].iconD = 'mdi-thumb-down-outline';
+                            this.num = this.num + 1;
+                            if(this.num == this.colors.length){
+                              break;
+                            }
                           }
-                          this.songs[i].color = this.colors[this.num];
-                          this.songs[i].iconF = 'mdi-heart-outline';
-                          this.songs[i].iconD = 'mdi-thumb-down-outline';
-                          this.num = this.num + 1;
-                          if(this.num == this.colors.length){
-                            break;
-                          }
-                        }
+                        }, 200);
                       }, 200);
-                    }, 200);
-                }, 300);
-              }, 100);
-            }, 50);
+                  }, 300);
+                }, 100);
+              }, 50);
+            }
+          }
+          else{
+            alert("No tiene suficientes canciones favoritas como para realizar una recomendación personalizada.");
           }
         }, 100);
         console.log("Salimos de la función COLABORATIVE FILTER");
+      },
+
+      /****** BUSCAR USUARIOS VECINOS ******/
+      getAllRecommendSongs(){
+        console.log("Mostrar todas las recomendaciones");
+        this.num = 0; 
+        for(var i = 5; i < this.songsDepuradas.length; i++){
+          this.songs.push(this.songsDepuradas[i]);
+          this.songs[i].color = this.colors[this.num];
+          this.songs[i].iconF = 'mdi-heart-outline';
+          this.songs[i].iconD = 'mdi-thumb-down-outline';
+          this.num = this.num + 1;
+          if(this.num == this.colors.length){
+            this.num = 0;
+          }
+        }
+        this.visible = false;
       },
 
       /****** BUSCAR USUARIOS VECINOS ******/
@@ -1061,7 +1109,6 @@
               alert('No hay canciones que mostrar por filtrado colaborativo.')
             } else {
               for(var j = 0; j < response.data.length; j++){
-                console.log("USUARIOS DEPURADOS POR CANCIONES " + response.data[j]);
                 this.songsNoDepuradas.push(response.data[j]);
               }
             }
@@ -1110,14 +1157,12 @@
             }
           }
         }
-        for(var y = 0; y < this.songsDepuradas.length; y++){
-          console.log(this.songsDepuradas[y].name+' '+this.songsDepuradas[y].num);
-        }
         console.log("Salimos de la función DEPURAR CANCIONES RECOMENDADAS");
       },
 
       /****** REORDENAR RECOMENDACIÓN ******/
       reordenarRecomendacion() {
+        console.log("Reordenamos las canciones");
         this.songsDepuradas.sort(function (a, b) {
           if (a.num < b.num) {
             return 1;
