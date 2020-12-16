@@ -95,13 +95,7 @@
           alert("Introduzca todos los parametros");
         } else {
           if (this.comprobarFormulario() == false) {
-              if(this.contraseña.length < 3){
-                  console.log("La contraseña debe tener al menos 3 caracteres.")
-              }
-              else{
-                  alert("Datos incompletos");
-              }
-            
+            console.log("Datos incompletos");
           } else {
             let body = {
               nombre: this.nombre,
@@ -121,12 +115,15 @@
       /****** COMPROBAR FORMULARIO ******/
       comprobarFormulario() {
         if (this.comprobarDNI() == false) {
+          alert("El DNI introducido es incorrecto. Debe tener 8 números y 1 letra.");
           return false;
         }
         if (this.comprobarEmail() == false) {
+          alert("El email introducido es incorrecto. Debe tener un nombre de longitud mínima 3, seguido de un '@' y un servidor de longitud mínima 3, seguido de un '.' y un dominio de longitud mínima 2 y máxima 4");
           return false;
         }
         if (this.comprobarContraseña() == false) {
+          alert("La Contraseña introducida es incorrecta. Recuerda que debe tener al menos 3 caracteres.");
           return false;
         }
         return true;
@@ -153,12 +150,42 @@
 
       /****** COMPROBAR EMAIL ******/
       comprobarEmail() {
-        for (let i = 0; i < this.email.length; i++) {
-          if (this.email[i] == "@") {
-            return true;
+        console.log(this.email);
+        if (this.email.length < 10) {
+          return false;
+        } else {
+          for (let i = 0; i < this.email.length; i++) {
+            if (this.email[i] == "@"){
+              if(i < 3){
+                return false;
+              }
+              else{
+                console.log("tiene @ e i = " + i);
+                for(let j = i; j < this.email.length; j++){
+                  if(this.email[j] == "."){
+                    console.log("tiene @ y j = " + j);
+                    console.log("j - i = " + (j - i));
+                    if((j - i) < 4){
+                      return false;
+                    }
+                    else{
+                      if(((this.email.length - j) <= 6) && ((this.email.length - j) > 2)){
+                        console.log("longitud - j = " + (this.email.length - j));
+                        return true;
+                      }
+                    }
+                  }
+                  else if((j + 1) == this.email.length){
+                    return false;
+                  }
+                }
+              }
+            }
+            else if((i + 1) == this.email.length){
+              return false;
+            }
           }
         }
-        return false;
       },
 
       /****** COMPROBAR CONTRASEÑA ******/
@@ -197,8 +224,10 @@
       },
 
       /****** COMPRUEBA LETRA DNI ******/
-      compruebaLetraDNI(letra) {
+      compruebaLetraDNI(letraDni) {
         var alf = "T,R,W,A,G,M,Y,F,P,D,X,B,N,J,Z,S,Q,V,H,L,C,K,E";
+        var letra = letraDni.toUpperCase();
+        console.log(letra);
         for (let i = 0; i < alf.length; i++) {
           if (letra == alf[i]) {
             return true;

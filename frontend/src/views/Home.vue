@@ -948,6 +948,7 @@
         var oldFavs = this.favs.length;
         this.getFavs();
         setTimeout(() =>{
+          console.log(this.favs);
           if(this.favs.length >= 5){
             if(this.favs.length == oldFavs){
               this.num = 0;  
@@ -957,7 +958,12 @@
                 alert("Mostrando las 5 canciones más recomendadas ordenadas de más a menos recomendadas. Pulsa el botón 'Mostrar Más' para ver todas las canciones recomendadas.");
               }
               else{
-                alert("Mostrando las canciones más recomendadas ordenadas de más a menos recomendadas. Sigue descubriendo música para obtener más recomendaciones.");
+                if(this.songsDepuradas.length >= 1){
+                  alert("Mostrando las canciones más recomendadas ordenadas de más a menos recomendadas. Sigue descubriendo música para obtener más recomendaciones.");
+                }
+                else{
+                  alert("No hay canciones recomendadas para ti.");
+                }  
               }
               //Recomendamos las 5 canciones con más coincidencias                 
               for(var i = 0; i < this.songsDepuradas.length; i++){
@@ -973,54 +979,62 @@
             }
             else{
               this.usuariosVecinos = [];
+              //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
+              this.buscarUsuariosVecinos();
+              this.vecinosDepurados = [];
               setTimeout(() =>{
-                //2. Buscamos a los vecinos (usuarios que les gustan las mismas canciones que a nosotros)
-                this.buscarUsuariosVecinos();
-                this.vecinosDepurados = [];
-                setTimeout(() =>{
-                  //3. Nos quedamos con los que mas veces aparecen
-                  this.depurarUsuariosVecinos();
+                //3. Nos quedamos con los que mas veces aparecen
+                this.depurarUsuariosVecinos();
+                setTimeout(() => {
+                  if(this.vecinosDepurados.length < 1){
+                    alert("No hay suficientes usuarios con gustos similares a los tuyos como para hacer una recomendación.");
+                  }
+                  else{
+                    //4. Buscamos los que tengan un num de canciones favoritas (distintas de las que ama y odia el us principal) similar
+                    this.depurarUsuariosPorCanciones();
                     setTimeout(() => {
-                      //4. Buscamos los que tengan un num de canciones favoritas (distintas de las que ama y odia el us principal) similar
-                      this.depurarUsuariosPorCanciones();
+                      //5. Buscamos las canciones mas coincidentes entre los usuarios
+                      this.depurarCancionesRecomendadas();
                       setTimeout(() => {
-                        //5. Buscamos las canciones mas coincidentes entre los usuarios
-                        this.depurarCancionesRecomendadas();
-                        setTimeout(() => {
-                          this.songs = [];
-                          //Reordenamos las canciones
-                          this.reordenarRecomendacion();
-                          //Ponemos color a las canciones
-                          this.num = 0;  
-                          if(this.songsDepuradas.length > 5){
-                            this.visible = true;
-                            alert("Mostrando las 5 canciones más recomendadas ordenadas de más a menos recomendadas. Pulsa el botón 'Mostrar Más' para ver todas las canciones recomendadas.");
-                          }
-                          else{
+                        this.songs = [];
+                        //Reordenamos las canciones
+                        this.reordenarRecomendacion();
+                        //Ponemos color a las canciones
+                        this.num = 0;  
+                        if(this.songsDepuradas.length > 5){
+                          this.visible = true;
+                          alert("Mostrando las 5 canciones más recomendadas ordenadas de más a menos recomendadas. Pulsa el botón 'Mostrar Más' para ver todas las canciones recomendadas.");
+                        }
+                        else{
+                          if(this.songsDepuradas.length >= 1){
                             alert("Mostrando las canciones más recomendadas ordenadas de más a menos recomendadas. Sigue descubriendo música para obtener más recomendaciones.");
                           }
-                          //Recomendamos las 5 canciones con más coincidencias                 
-                          for(var i = 0; i < this.songsDepuradas.length; i++){
-                            this.songs.push(this.songsDepuradas[i]);
-                            this.songs[i].color = this.colors[this.num];
-                            this.songs[i].iconF = 'mdi-heart-outline';
-                            this.songs[i].iconD = 'mdi-thumb-down-outline';
-                            this.num = this.num + 1;
-                            if(this.num == this.colors.length){
-                              break;
-                            }
+                          else{
+                            alert("No hay canciones recomendadas para ti.");
+                          }  
+                        }
+                        //Recomendamos las 5 canciones con más coincidencias                 
+                        for(var i = 0; i < this.songsDepuradas.length; i++){
+                          this.songs.push(this.songsDepuradas[i]);
+                          this.songs[i].color = this.colors[this.num];
+                          this.songs[i].iconF = 'mdi-heart-outline';
+                          this.songs[i].iconD = 'mdi-thumb-down-outline';
+                          this.num = this.num + 1;
+                          if(this.num == this.colors.length){
+                            break;
                           }
-                        }, 200);
+                        }
                       }, 200);
-                  }, 300);
-                }, 100);
-              }, 50);
+                    }, 200);
+                  }
+                }, 300);
+              }, 300);
             }
           }
           else{
             alert("No tiene suficientes canciones favoritas como para realizar una recomendación personalizada.");
           }
-        }, 100);
+        }, 500);
         console.log("Salimos de la función COLABORATIVE FILTER");
       },
 
@@ -1053,6 +1067,7 @@
             }else{
               for(var j = 0; j < response.data.length; j++){
                 this.usuariosVecinos.push(response.data[j]);
+                console.log(response.data[j]);
               }
             }
           })
@@ -1064,6 +1079,7 @@
 
       /****** DEPURAR USUARIOS VECINOS ******/
       depurarUsuariosVecinos(){
+        console.log("VECINOS DEPURADOS");
         for(var i = 0; i < this.usuariosVecinos.length; i++){
           var aux = 0;
           for(var j = 0; j < this.usuariosVecinos.length; j++){
@@ -1081,15 +1097,20 @@
                   }
                 }
                 if(existe == false){
+                  console.log(this.usuariosVecinos[i]);
                   this.vecinosDepurados.push(this.usuariosVecinos[i]);
                 }
               }else{
+                console.log(this.usuariosVecinos[i]);
                 this.vecinosDepurados.push(this.usuariosVecinos[i]);
               }
               break;
             }
           }
-        }
+        }      
+        //Eliminamos al propio usuario de la lista, al usuario actual
+        var borrar = this.vecinosDepurados.indexOf(this.dni);
+        this.vecinosDepurados.splice( borrar, 1 );
         console.log("VECINOS DEPURADOS = "+this.vecinosDepurados.length);
       },
 
@@ -1097,6 +1118,7 @@
       depurarUsuariosPorCanciones(){
         this.songsNoDepuradas = [];
         for(var i = 0; i < this.vecinosDepurados.length; i++){
+          console.log("DEPURAMOS POR CANCIONES");
           axios.post(direccionIp + "/getSongsColaborativeFilter", {
             usuario: this.vecinosDepurados[i],
             dni: this.dni,
@@ -1109,6 +1131,7 @@
               alert('No hay canciones que mostrar por filtrado colaborativo.')
             } else {
               for(var j = 0; j < response.data.length; j++){
+                console.log(response.data[j]);
                 this.songsNoDepuradas.push(response.data[j]);
               }
             }

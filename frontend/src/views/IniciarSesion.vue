@@ -118,11 +118,13 @@
                     contraseña: this.contraseña
                 }).then(response => {
                     var json = {msg: 'Error, datos mal introducidos'};
-                    console.log(response.data[0]);
-                    if(JSON.stringify(response.data[0]) == JSON.stringify(json)){
+                    console.log(response.json);
+                    if(JSON.stringify(response.data[0]) == JSON.stringify(json) || JSON.stringify(response.data[0]) == undefined){
                         this.tipoAlerta = "error";
                         this.alerta = true;
-                        this.textoAlerta = "Los datos introducidos son incorrectos"
+                        this.textoAlerta = "Los datos introducidos son incorrectos";
+                        alert(this.textoAlerta);
+                        //this.cambiarPantalla("");
                     }
                     else{
                         this.$emit("entro", this.dni);
