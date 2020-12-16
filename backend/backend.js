@@ -292,23 +292,25 @@ app.post("/postNewUser", (req, res) => {
 app.post("/datosEntrada", (req, res) => {
   var pass = req.body.contraseña;
   var dni = req.body.dni;
-  var query = "match(u:UserName) where u.dni='"+dni+"' and u.passw='" + pass + "' return u";
+  var name = "";
+  console.log(dni + " " + pass);
+  var query = "match(u:UserName) where u.dni='"+dni+"' and u.passw='" + pass + "' return u.name";
   console.log(query);
   const session = driver.session();
-  const resultPromise = session.run(query);
-  resultPromise.then(result => {   
-    console.log(result.records[0]);
-    if (result.records.length == 0) {
-      res.json({
-        msg: 'Error, datos mal introducidos'
-      })
-    }
-    else {
-      var resultado = result.records[0].get(0);
-      res.send(resultado);
-    }
-    session.close();
-  })
+  const resultadoPromesa = session.run(query).subscribe({
+      onNext: function (result) {
+        name = result.get(0);
+      },
+      onCompleted: function () {
+        console.log(name);
+          res.send(name);
+          session.close();
+      },
+      onError: function (error) {
+        res.send('Error, datos mal introducidos');
+          console.log(error + " ERROR");
+      }
+    })  
 });
 
 /****** GET USER NAME ******/
